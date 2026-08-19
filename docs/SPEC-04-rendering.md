@@ -98,7 +98,7 @@ rough material cannot express "there is water there".
 Per-instance colour goes through `instanceColor`, so idle desaturation and damage tinting
 cost a buffer write rather than a material. Matrices are recomputed only when a building is
 added, removed or changes state — never per frame. See **Animated Objects** below for the
-two deliberate exceptions.
+deliberate exceptions.
 
 ## Procedural Geometry
 
@@ -234,24 +234,27 @@ the code comment must say so, so nobody later mistakes them for a graph solver.
 
 ## Animated Objects
 
-Exactly two things in the scene move every frame, and they are the stated exception to
+Exactly three things in the scene move every frame, and they are the stated exception to
 "matrices are recomputed only on a structural change":
 
-| Object        | File                | What moves                          |
-| ------------- | ------------------- | ----------------------------------- |
-| `FlowPackets` | `Pipelines.tsx`     | packets sliding along cable curves  |
-| `Rocket`      | `Rocket.tsx`        | one rocket descending and lifting off |
+| Object                            | File            | What moves                            |
+| ---------------------------------- | --------------- | -------------------------------------- |
+| `FlowPackets`                       | `Pipelines.tsx` | packets sliding along cable curves     |
+| `Rocket`                            | `Rocket.tsx`    | one rocket descending and lifting off  |
+| Solar arrays (`BuildingCluster`)    | `Buildings.tsx` | panel yaw tracking the sun's direction |
 
-Both follow the same three rules, and anything added here must too:
+All three follow the same three rules, and anything added here must too:
 
-1. Read state imperatively inside `useFrame` via `useStore.getState()`. Neither ever touches
-   React, so a simulation tick still cannot re-render the tree.
+1. Read state imperatively inside `useFrame` via `useStore.getState()`. None of them ever
+   touch React, so a simulation tick still cannot re-render the tree.
 2. Allocate no geometry, vectors, matrices or arrays per frame. Write into module-level
    scratch objects, or straight onto a ref's `position` / `scale`. (`Rocket` returns a small
-   phase record each frame; that is a deliberate exception, taken because keeping the phase
-   arithmetic pure is what makes it testable without a renderer.)
-3. Drive the phase from the **simulation** clock (`sol + solTime`), not the wall clock.
-   Pausing then freezes the animation and 16× speeds it up, both for free.
+   phase record and the solar arrays a yaw scalar each frame; that is a deliberate exception,
+   taken because keeping the arithmetic pure is what makes it testable without a renderer.)
+3. Drive the phase from the **simulation** clock — `sol + solTime` for a cycle that spans
+   several sols (the rocket), `solTime` alone for anything that simply repeats every sol (the
+   sun, and the arrays that track it). Pausing then freezes the animation and 16× speeds it
+   up, both for free.
 
 ### The rocket
 
@@ -275,6 +278,20 @@ The plume is a separate mesh with `meshBasicMaterial` and `toneMapped={false}`, 
 recipe as the flow packets, so it clears the bloom threshold without a second light rig. The
 body reuses `createBuildingMaterial`, which lights its window band at night through the
 existing `aGlow` path.
+
+### Solar arrays
+
+Every solar array yaws in place to face wherever `SunLight.tsx` currently renders the sun,
+using the same `sweep = 2π(solTime − 0.25)` angle as the light rig. Only yaw moves: the
+panel's own tilt in `buildingGeometry.ts` is deliberately shallow so it doesn't present its
+unlit edge to the camera, and steepening it to track elevation as well would reintroduce
+exactly that problem at low sun angles.
+
+The yaw math lives in `render/solarTracking.ts` rather than in `Buildings.tsx`, the same
+split as `rocketPhase.ts`, so it is tested (`solarTracking.test.ts`) without a renderer.
+Because only rotation changes frame to frame, `BuildingCluster`'s per-frame pass rewrites
+just the instance matrix — colour and the bounding sphere, both invariant under rotation,
+stay with the structural `useLayoutEffect` that runs on building-list changes.
 
 ## Camera (F-20)
 
