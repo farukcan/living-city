@@ -52,11 +52,15 @@ export function PowerIcon({ className }: IconProps) {
   );
 }
 
+/** Chemical formula O₂: a circle for O, a smaller 2 sitting clear of it at the lower right. */
 export function OxygenIcon({ className }: IconProps) {
   return (
     <Svg className={className}>
-      <circle cx="9" cy="12" r="5.5" />
-      <path d="M17 9.5v5M15.5 12h3" />
+      <circle cx="8" cy="10.8" r="5.6" />
+      <path
+        d="M16.8 16.4c0-1.05.8-1.7 1.85-1.7 1.05 0 1.75.62 1.75 1.5 0 .92-.78 1.48-1.95 2.2L16.6 19.8h4.15"
+        strokeWidth={1.35}
+      />
     </Svg>
   );
 }
