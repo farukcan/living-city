@@ -1,4 +1,3 @@
-import { GRACE_SOLS } from '../sim/constants.ts';
 import { useStore } from '../state/store.ts';
 import { formatDays } from './format.ts';
 
@@ -64,6 +63,8 @@ function Warning({ title, detail }: { title: string; detail: string }) {
 export function CriticalWarnings() {
   const oxygenCritical = useStore((state) => state.ui.oxygenCritical);
   const oxygenDaysLeft = useStore((state) => state.ui.resources.oxygen.daysLeft);
+  const waterDeprived = useStore((state) => state.ui.waterDeprived);
+  const foodDeprived = useStore((state) => state.ui.foodDeprived);
   const waterGraceLeft = useStore((state) => state.ui.waterGraceLeft);
   const foodGraceLeft = useStore((state) => state.ui.foodGraceLeft);
   const gameOver = useStore((state) => state.ui.gameOver);
@@ -71,10 +72,9 @@ export function CriticalWarnings() {
   // The game-over screen says all of this, and says it better.
   if (gameOver !== null) return null;
 
-  // Any grace consumed at all means the shortage has already started.
-  const waterShort = waterGraceLeft < GRACE_SOLS.water;
-  const foodShort = foodGraceLeft < GRACE_SOLS.food;
-  if (!oxygenCritical && !waterShort && !foodShort) return null;
+  // Show only while the tank is still below a sol of need. Leftover timer debt is silent
+  // on purpose: it shortens the next drought, it is not a reason to keep shouting.
+  if (!oxygenCritical && !waterDeprived && !foodDeprived) return null;
 
   return (
     <div
@@ -87,7 +87,7 @@ export function CriticalWarnings() {
           detail={`${formatDays(oxygenDaysLeft)} of air left. Running out is immediately fatal.`}
         />
       )}
-      {waterShort && (
+      {waterDeprived && (
         <Warning
           title={waterGraceLeft > 0 ? 'Water running out' : 'Dying of thirst'}
           detail={
@@ -97,7 +97,7 @@ export function CriticalWarnings() {
           }
         />
       )}
-      {foodShort && (
+      {foodDeprived && (
         <Warning
           title={foodGraceLeft > 0 ? 'Food running out' : 'Starving'}
           detail={

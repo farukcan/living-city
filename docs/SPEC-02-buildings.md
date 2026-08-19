@@ -165,7 +165,8 @@ it. It is the first dial to reach for if the difficulty needs adjusting, ahead o
 | `MIN_VIABLE_POPULATION`      | 0          | floor; below one colonist the colony ends     |
 
 Oxygen appears nowhere here on purpose: it has no grace period at all. Reaching zero is an
-immediate loss.
+immediate loss. Relief stops deaths immediately; the leftover clock is debt against the
+next drought (see [SPEC-01](./SPEC-01-simulation.md)).
 
 ## Placement Rules
 

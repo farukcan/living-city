@@ -5,7 +5,7 @@ import {
   GRACE_SOLS,
   PER_CAPITA_CONSUMPTION,
 } from './constants.ts';
-import { effectivePopulation, updatePopulation } from './population.ts';
+import { effectivePopulation, isDeprived, updatePopulation } from './population.ts';
 import type { DeprivationTimers, ResourceKind } from './types.ts';
 
 const POPULATION = 10;
@@ -95,6 +95,14 @@ describe('deprivation timers', () => {
   });
 });
 
+describe('isDeprived', () => {
+  it('is true below a sol of need and false at or above it', () => {
+    const need = POPULATION * PER_CAPITA_CONSUMPTION.water;
+    expect(isDeprived(need * 0.9, POPULATION, 'water')).toBe(true);
+    expect(isDeprived(need, POPULATION, 'water')).toBe(false);
+  });
+});
+
 describe('death', () => {
   it('kills nobody while the grace period holds', () => {
     const inside = deprive(stocksWith({ water: 0 }), GRACE_SOLS.water - 0.1);
@@ -129,6 +137,23 @@ describe('death', () => {
     const thirsty = deprive(stocksWith({ water: 0 }), past).population;
     const bothGone = deprive(stocksWith({ water: 0, food: 0 }), past).population;
     expect(bothGone).toBeLessThan(thirsty);
+  });
+
+  it('stops killing once stock recovers, even if the clock still carries debt', () => {
+    const past = deprive(stocksWith({ water: 0 }), GRACE_SOLS.water + 2);
+    expect(past.population).toBeLessThan(POPULATION);
+    expect(past.deprivation.water).toBeGreaterThan(GRACE_SOLS.water);
+
+    let recovered = past;
+    for (let elapsed = 0; elapsed < 1; elapsed += DT_SOL) {
+      recovered = step({
+        stocks: stocksWith({}),
+        deprivation: recovered.deprivation,
+        population: recovered.population,
+      });
+    }
+    expect(recovered.population).toBe(past.population);
+    expect(recovered.deprivation.water).toBeGreaterThan(GRACE_SOLS.water);
   });
 
   it('kills for a life-support deficit with no grace period at all', () => {

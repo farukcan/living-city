@@ -248,7 +248,8 @@ Two deliberate choices:
 - The clock starts when the stock drops below a single sol of need, not when the tank is
   empty. By the time it is empty the rationing has been going on for a while.
 - Relief unwinds the clock at a quarter rate rather than resetting it. A colony that scrapes
-  through one drought carries the debt into the next, so repeated shortages compound.
+  through one drought carries the debt into the next, so repeated shortages compound. The
+  leftover timer is that debt — it does not keep killing after the tanks refill.
 
 The upper clamp is load-bearing: it bounds the death rate, which is what keeps the
 arithmetic below from going negative, and stops a colony that survived a long drought from
@@ -258,15 +259,15 @@ being erased instantly by the next one.
 
 ```
 overrun = max(0, timer - GRACE_SOLS[kind])
-rate    = overrun > 0 ? DEATH_RATE_PER_SOL × (1 + overrun × DEATH_ACCELERATION) : 0
+rate    = deprived && overrun > 0 ? DEATH_RATE_PER_SOL × (1 + overrun × DEATH_ACCELERATION) : 0
 total   = Σ rate over water and food, + DEATH_RATE_PER_SOL if lifeSupportDeficit
 pop'    = max(0, pop × (1 - total × dtSol))
 ```
 
-Water and food run independently and their rates add — a colony out of both is in worse
-trouble than one out of either. The rate is linear in the overrun, which compounds into
-something much steeper in the population itself: 2 %/sol at the deadline, 32 %/sol five sols
-after it. That is what makes a late rescue feel late.
+Deaths run only while `deprived`. Water and food run independently and their rates add — a
+colony out of both is in worse trouble than one out of either. The rate is linear in the
+overrun, which compounds into something much steeper in the population itself: 2 %/sol at
+the deadline, 32 %/sol five sols after it. That is what makes a late rescue feel late.
 
 A life-support deficit contributes a flat rate with no grace period. Freezing is the one way
 to lose a colony to cold, and giving cold a grace period while oxygen has none would be

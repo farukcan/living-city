@@ -65,6 +65,15 @@ function timerCeiling(resource: GraceResource): number {
   return GRACE_SOLS[resource] + DEATH_RAMP_SOLS;
 }
 
+/** True when stock is below a single sol of need — the clock starts here, not at zero. */
+export function isDeprived(
+  stock: number,
+  effectivePop: number,
+  resource: GraceResource,
+): boolean {
+  return stock < effectivePop * PER_CAPITA_CONSUMPTION[resource];
+}
+
 /**
  * The deprivation clock starts when the stock falls below what the colonists need for a
  * single sol, not when it hits zero: by the time the tank is empty the rationing has already
@@ -121,11 +130,11 @@ export function updatePopulation(inputs: PopulationInputs): PopulationResult {
   let ratePerSol = lifeSupportDeficit ? DEATH_RATE_PER_SOL : 0;
 
   for (const resource of GRACE_RESOURCES) {
-    const required = inputs.effectivePopulation * PER_CAPITA_CONSUMPTION[resource];
-    const deprived = stocks[resource] < required;
+    const deprived = isDeprived(stocks[resource], inputs.effectivePopulation, resource);
     const timer = advanceTimer(deprivation[resource], resource, deprived, dtSol);
     deprivation[resource] = timer;
-    ratePerSol += deathRate(timer, resource);
+    // Debt on the clock shortens the next drought; it does not keep killing after relief.
+    if (deprived) ratePerSol += deathRate(timer, resource);
   }
 
   if (ratePerSol <= 0) return { population, deprivation };

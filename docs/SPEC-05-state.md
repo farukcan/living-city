@@ -38,11 +38,14 @@ events and the sparkline series — everything the HUD shows and nothing else. I
 object of primitives so selector equality is cheap.
 
 It also carries the alarm state: `outage`, `oxygenCritical`, `waterGraceLeft`,
-`foodGraceLeft`, `overflowPopulation`, `solsUntilLanding`, `nextLandingCrew` and `gameOver`.
+`foodGraceLeft`, `waterDeprived`, `foodDeprived`, `overflowPopulation`, `solsUntilLanding`,
+`nextLandingCrew` and `gameOver`.
 The two grace figures are flattened to numbers rather than passed as `sim.deprivation`
 directly, because that object is a fresh allocation every tick and a selector on it would
-re-render every subscriber four times a second whether or not anything changed. `gameOver`
-is safe to pass by reference: it changes at most once per colony.
+re-render every subscriber four times a second whether or not anything changed. The
+deprived flags are the live shortage, not leftover timer debt — HUD warnings key off those,
+so a colony that has restocked stops shouting even while the clock is still unwinding.
+`gameOver` is safe to pass by reference: it changes at most once per colony.
 
 ## The Loop
 

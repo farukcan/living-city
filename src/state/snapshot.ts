@@ -6,6 +6,7 @@
  */
 
 import { GRACE_SOLS } from '../sim/constants.ts';
+import { effectivePopulation, isDeprived } from '../sim/population.ts';
 import { computeCaps } from '../sim/resources.ts';
 import { nextLandingCrew, solsUntilLanding } from '../sim/rocket.ts';
 import type {
@@ -57,6 +58,9 @@ export type UiSnapshot = {
    */
   readonly waterGraceLeft: number;
   readonly foodGraceLeft: number;
+  /** Stock is below a sol of need right now. Timer debt alone does not keep the alarm up. */
+  readonly waterDeprived: boolean;
+  readonly foodDeprived: boolean;
   /** Colonists with no habitat bunk. Each one draws double.  */
   readonly overflowPopulation: number;
   readonly solsUntilLanding: number;
@@ -100,6 +104,8 @@ export function emptySnapshot(): UiSnapshot {
     buildingCount: 0,
     waterGraceLeft: GRACE_SOLS.water,
     foodGraceLeft: GRACE_SOLS.food,
+    waterDeprived: false,
+    foodDeprived: false,
     overflowPopulation: 0,
     solsUntilLanding: 0,
     nextLandingCrew: 0,
@@ -139,6 +145,8 @@ export function projectSnapshot(sim: SimState): UiSnapshot {
     };
   }
 
+  const effective = effectivePopulation(sim.population, report.populationCapacity);
+
   return {
     sol: sim.sol,
     solTime: sim.solTime,
@@ -158,6 +166,8 @@ export function projectSnapshot(sim: SimState): UiSnapshot {
     buildingCount: sim.buildings.length,
     waterGraceLeft: GRACE_SOLS.water - sim.deprivation.water,
     foodGraceLeft: GRACE_SOLS.food - sim.deprivation.food,
+    waterDeprived: isDeprived(sim.stocks.water, effective, 'water'),
+    foodDeprived: isDeprived(sim.stocks.food, effective, 'food'),
     overflowPopulation: Math.max(0, sim.population - report.populationCapacity),
     solsUntilLanding: solsUntilLanding(sim.sol, sim.solTime),
     nextLandingCrew: nextLandingCrew(sim.sol),
