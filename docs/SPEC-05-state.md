@@ -47,6 +47,12 @@ deprived flags are the live shortage, not leftover timer debt — HUD warnings k
 so a colony that has restocked stops shouting even while the clock is still unwinding.
 `gameOver` is safe to pass by reference: it changes at most once per colony.
 
+`habitatCount` and `damagedBuildingCount` feed the objectives panel: the former against the
+win threshold, the latter to surface the "repair" prompt for as long as it stays above
+zero. Both are plain reduces over `sim.buildings`, computed fresh each snapshot rather than
+stored on `SimState` — nothing else needs them, so there is no reason to carry them
+further than the projection that does.
+
 ## The Loop
 
 ```mermaid

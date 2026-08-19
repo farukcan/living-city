@@ -275,17 +275,23 @@ incoherent.
 
 ### Game Over
 
-Two terminal states, both sticky and both persisted:
+Three terminal states, all sticky and all persisted — `victory` is a win, but it rides the
+same `gameOver` field as the two losses because everything downstream (the loop gate,
+persistence, the restart button) only ever needs to know whether the colony is still
+running:
 
-| Cause         | Trigger                            |
-| ------------- | ---------------------------------- |
-| `oxygen`      | the oxygen stock reaches zero      |
-| `depopulated` | fewer than one colonist is left    |
+| Cause         | Trigger                                                                    |
+| ------------- | --------------------------------------------------------------------------- |
+| `oxygen`      | the oxygen stock reaches zero                                              |
+| `depopulated` | fewer than one colonist is left                                            |
+| `victory`     | sol ≥ `WIN_SOLS` **and** habitats ≥ `WIN_HABITATS` **and** population ≥ `WIN_POPULATION`, all at once |
 
 Once `gameOver` is set, `simulateTick` returns its input unchanged — the same object, not a
 copy, so nothing downstream churns — and the loop stops stepping entirely. Suffocation is
 exact-comparable because stocks are clamped at zero. `depopulated` exists so a colony
-starved down to nobody ends rather than simulating an empty base forever.
+starved down to nobody ends rather than simulating an empty base forever. `victory` is
+checked last, after both losses, so a colony that starves the same tick it would have
+crossed every win threshold still loses.
 
 ## Survival Score
 

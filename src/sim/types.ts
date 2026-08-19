@@ -216,7 +216,7 @@ export type DeprivationTimers = Readonly<Record<GraceResource, number>>;
 /** Set once and never cleared: a colony that has ended stays ended, reload included. */
 export type GameOver = {
   readonly sol: number;
-  readonly cause: 'oxygen' | 'depopulated';
+  readonly cause: 'oxygen' | 'depopulated' | 'victory';
 };
 
 export type HistorySample = {

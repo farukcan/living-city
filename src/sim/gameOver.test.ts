@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createColony } from './colony.ts';
-import { TICK_SECONDS } from './constants.ts';
+import { TICK_SECONDS, WIN_HABITATS, WIN_POPULATION, WIN_SOLS } from './constants.ts';
 import { simulateTick } from './tick.ts';
-import type { SimState } from './types.ts';
+import type { Building, SimState } from './types.ts';
 
 const SEED = 42;
 
@@ -13,6 +13,32 @@ function airless(): SimState {
     ...colony,
     buildings: [],
     stocks: { power: 0, oxygen: 0, water: 500, food: 200, minerals: 0 },
+  };
+}
+
+/** Enough habitats and battery banks to clear the win thresholds without a resource death. */
+function thrivingColony(habitatCount: number, population: number): SimState {
+  const habitats: Building[] = Array.from({ length: habitatCount }, (_, i) => ({
+    id: `h${i}`,
+    kind: 'habitat' as const,
+    q: i,
+    r: 0,
+    status: 'active' as const,
+  }));
+  // Two battery banks give the habitats' tier-1 demand enough discharge capacity that the
+  // colony does not take a life-support death mid-tick and shave population under threshold.
+  const batteries: Building[] = [
+    { id: 'bb0', kind: 'batteryBank' as const, q: 100, r: 0, status: 'active' as const },
+    { id: 'bb1', kind: 'batteryBank' as const, q: 101, r: 0, status: 'active' as const },
+  ];
+
+  const colony = createColony(SEED);
+  return {
+    ...colony,
+    sol: WIN_SOLS,
+    buildings: [...habitats, ...batteries],
+    population,
+    stocks: { power: 100, oxygen: 1e6, water: 1e6, food: 1e6, minerals: 0 },
   };
 }
 
@@ -55,5 +81,33 @@ describe('game over', () => {
   it('leaves a healthy colony alone', () => {
     const colony = createColony(SEED);
     expect(colony.gameOver).toBeNull();
+  });
+
+  it('declares victory once sols survived, habitats built and population all clear their thresholds', () => {
+    const state = thrivingColony(WIN_HABITATS, WIN_POPULATION);
+    const ticked = simulateTick(state, TICK_SECONDS);
+    expect(ticked.gameOver).not.toBeNull();
+    expect(ticked.gameOver?.cause).toBe('victory');
+    expect(ticked.gameOver?.sol).toBe(WIN_SOLS);
+  });
+
+  it('does not declare victory while any one threshold is short', () => {
+    const shortOnHabitats = simulateTick(
+      thrivingColony(WIN_HABITATS - 1, WIN_POPULATION),
+      TICK_SECONDS,
+    );
+    expect(shortOnHabitats.gameOver).toBeNull();
+
+    const shortOnPopulation = simulateTick(
+      thrivingColony(WIN_HABITATS, WIN_POPULATION - 1),
+      TICK_SECONDS,
+    );
+    expect(shortOnPopulation.gameOver).toBeNull();
+
+    const shortOnSols = simulateTick(
+      { ...thrivingColony(WIN_HABITATS, WIN_POPULATION), sol: WIN_SOLS - 1 },
+      TICK_SECONDS,
+    );
+    expect(shortOnSols.gameOver).toBeNull();
   });
 });

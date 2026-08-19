@@ -1,8 +1,10 @@
+import { WIN_HABITATS, WIN_POPULATION, WIN_SOLS } from '../sim/constants.ts';
+import type { GameOver } from '../sim/types.ts';
 import { restartColony } from '../state/actions.ts';
 import { useStore } from '../state/store.ts';
 
 /**
- * The end of a colony.
+ * The end of a colony — a loss or the win.
  *
  * The only full-screen, click-blocking element in the app, which is justified by there being
  * nothing left to click behind it: the loop has stopped and the simulation returns the same
@@ -10,14 +12,22 @@ import { useStore } from '../state/store.ts';
  * covered by it.
  */
 
-const CAUSE_HEADLINE: Readonly<Record<'oxygen' | 'depopulated', string>> = {
+const CAUSE_HEADLINE: Readonly<Record<GameOver['cause'], string>> = {
   oxygen: 'The air ran out',
   depopulated: 'Nobody is left',
+  victory: 'The colony has taken root',
 };
 
-const CAUSE_DETAIL: Readonly<Record<'oxygen' | 'depopulated', string>> = {
+const CAUSE_DETAIL: Readonly<Record<GameOver['cause'], string>> = {
   oxygen: 'The last of the oxygen was breathed. Suffocation is immediate; there is no rationing it.',
   depopulated: 'The colony went without for too long, and the last colonist died with it.',
+  victory: `${WIN_SOLS} sols survived, ${WIN_HABITATS} habitats standing, ${WIN_POPULATION} colonists fed. Mars is inhabited now.`,
+};
+
+const CAUSE_LABEL: Readonly<Record<GameOver['cause'], string>> = {
+  oxygen: 'Colony lost',
+  depopulated: 'Colony lost',
+  victory: 'Colony won',
 };
 
 export function GameOverOverlay() {
@@ -27,13 +37,29 @@ export function GameOverOverlay() {
 
   if (gameOver === null) return null;
 
+  const isVictory = gameOver.cause === 'victory';
+
   return (
     <div
       data-testid="game-over"
       className="pointer-events-auto absolute inset-0 z-30 flex items-center justify-center bg-black/80 p-6 backdrop-blur-sm"
     >
-      <div className="w-80 rounded-lg border border-[#EF5350]/40 bg-gradient-to-b from-white/[0.06] to-black/60 p-5 shadow-2xl shadow-black/60">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-[#EF5350]">Colony lost</div>
+      <div
+        className={
+          isVictory
+            ? 'w-80 rounded-lg border border-[#7FD98A]/40 bg-gradient-to-b from-white/[0.06] to-black/60 p-5 shadow-2xl shadow-black/60'
+            : 'w-80 rounded-lg border border-[#EF5350]/40 bg-gradient-to-b from-white/[0.06] to-black/60 p-5 shadow-2xl shadow-black/60'
+        }
+      >
+        <div
+          className={
+            isVictory
+              ? 'text-[10px] uppercase tracking-[0.2em] text-[#7FD98A]'
+              : 'text-[10px] uppercase tracking-[0.2em] text-[#EF5350]'
+          }
+        >
+          {CAUSE_LABEL[gameOver.cause]}
+        </div>
         <h1 className="mt-1 text-xl text-white/95">{CAUSE_HEADLINE[gameOver.cause]}</h1>
         <p className="mt-2 text-[11px] leading-snug text-white/50">
           {CAUSE_DETAIL[gameOver.cause]}

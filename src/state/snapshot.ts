@@ -7,7 +7,7 @@
 
 import { GRACE_SOLS } from '../sim/constants.ts';
 import { effectivePopulation, isDeprived } from '../sim/population.ts';
-import { computeCaps } from '../sim/resources.ts';
+import { computeCaps, countKind } from '../sim/resources.ts';
 import { nextLandingCrew, solsUntilLanding } from '../sim/rocket.ts';
 import type {
   ActiveEvent,
@@ -51,6 +51,9 @@ export type UiSnapshot = {
   readonly heatDemandKW: number;
   readonly wastedKW: number;
   readonly buildingCount: number;
+  readonly habitatCount: number;
+  /** Buildings a meteor has hit and nobody has repaired yet. */
+  readonly damagedBuildingCount: number;
   /**
    * Sols of grace left before deaths begin; negative once they have. Two flat numbers rather
    * than the timers object, which is a fresh allocation every tick and would re-render every
@@ -102,6 +105,8 @@ export function emptySnapshot(): UiSnapshot {
     heatDemandKW: 0,
     wastedKW: 0,
     buildingCount: 0,
+    habitatCount: 0,
+    damagedBuildingCount: 0,
     waterGraceLeft: GRACE_SOLS.water,
     foodGraceLeft: GRACE_SOLS.food,
     waterDeprived: false,
@@ -164,6 +169,11 @@ export function projectSnapshot(sim: SimState): UiSnapshot {
     heatDemandKW: report.power.heatDemandKW,
     wastedKW: report.power.wastedKW,
     buildingCount: sim.buildings.length,
+    habitatCount: countKind(sim.buildings, 'habitat'),
+    damagedBuildingCount: sim.buildings.reduce(
+      (total, building) => (building.status === 'damaged' ? total + 1 : total),
+      0,
+    ),
     waterGraceLeft: GRACE_SOLS.water - sim.deprivation.water,
     foodGraceLeft: GRACE_SOLS.food - sim.deprivation.food,
     waterDeprived: isDeprived(sim.stocks.water, effective, 'water'),

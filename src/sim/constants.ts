@@ -256,6 +256,15 @@ export const BUILDING_DEFINITIONS: Readonly<Record<BuildingKind, BuildingDefinit
   },
 };
 
+// ---------------------------------------------------------------------------
+// Win condition
+// ---------------------------------------------------------------------------
+
+/** Sols survived, habitats standing, and colonists alive required to win the colony. */
+export const WIN_SOLS = 60;
+export const WIN_HABITATS = 15;
+export const WIN_POPULATION = 150;
+
 export const BUILDING_KINDS = Object.keys(BUILDING_DEFINITIONS) as readonly BuildingKind[];
 
 /** What the build bar offers. Fixtures the colony is issued are excluded. */

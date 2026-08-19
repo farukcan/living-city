@@ -168,6 +168,17 @@ Oxygen appears nowhere here on purpose: it has no grace period at all. Reaching 
 immediate loss. Relief stops deaths immediately; the leftover clock is debt against the
 next drought (see [SPEC-01](./SPEC-01-simulation.md)).
 
+## Win Condition
+
+| Constant        | Value | Note                                          |
+| ---------------- | ----- | ---------------------------------------------- |
+| `WIN_SOLS`       | 60    | sols survived                                  |
+| `WIN_HABITATS`   | 15    | Habitats standing, any status counts           |
+| `WIN_POPULATION` | 150   | colonists alive                                |
+
+All three must hold on the same tick — see [SPEC-01](./SPEC-01-simulation.md)'s Game Over
+section for how `victory` is checked against the two losses.
+
 ## Placement Rules
 
 1. The kind must be buildable. The Landing Pad is not.

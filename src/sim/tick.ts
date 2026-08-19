@@ -8,7 +8,14 @@
  * consumes what the tick produced.
  */
 
-import { HISTORY_SOLS, HOURS_PER_SOL, SECONDS_PER_SOL } from './constants.ts';
+import {
+  HISTORY_SOLS,
+  HOURS_PER_SOL,
+  SECONDS_PER_SOL,
+  WIN_HABITATS,
+  WIN_POPULATION,
+  WIN_SOLS,
+} from './constants.ts';
 import { computeEnvironment } from './environment.ts';
 import { advanceEvents, dustFactorFrom, extraDrainFrom } from './events.ts';
 import { effectivePopulation, populationCapacity, updatePopulation } from './population.ts';
@@ -59,15 +66,25 @@ function combineEfficiency(
 }
 
 /**
- * The two ways a colony ends.
+ * The three ways a colony ends.
  *
  * Suffocation is exact-comparable because `applyFlows` clamps stocks at zero. Depopulation
  * catches the slower endings — a colony starved below one person would otherwise keep
- * simulating an empty base forever, which is a worse ending than an ending.
+ * simulating an empty base forever, which is a worse ending than an ending. Victory needs
+ * all three win thresholds at once, checked last so a colony that starves the same tick it
+ * would have won still loses — nothing is alive to have won it.
  */
-function detectGameOver(oxygen: number, population: number, sol: number): GameOver | null {
+function detectGameOver(
+  oxygen: number,
+  population: number,
+  sol: number,
+  habitatCount: number,
+): GameOver | null {
   if (oxygen <= 0) return { sol, cause: 'oxygen' };
   if (population < 1) return { sol, cause: 'depopulated' };
+  if (sol >= WIN_SOLS && habitatCount >= WIN_HABITATS && population >= WIN_POPULATION) {
+    return { sol, cause: 'victory' };
+  }
   return null;
 }
 
@@ -190,7 +207,7 @@ export function simulateTick(state: SimState, dtSeconds: number): SimState {
 
   // 7. Oxygen has no grace period: there is nothing to ration when there is nothing to
   //    breathe. Everything else drains through the deprivation timers instead.
-  const gameOver = detectGameOver(stocks.oxygen, population, sol);
+  const gameOver = detectGameOver(stocks.oxygen, population, sol, countKind(buildings, 'habitat'));
 
   const survival = computeSurvival(flows.reports, power.report, population);
 

@@ -10,6 +10,7 @@ import { HoverCard } from './ui/HoverCard.tsx';
 import { InspectorPanel } from './ui/InspectorPanel.tsx';
 import { DesktopNotice, Onboarding } from './ui/Onboarding.tsx';
 import { ProfilerPanel } from './ui/ProfilerPanel.tsx';
+import { QuestPanel } from './ui/QuestPanel.tsx';
 import { Sparkline } from './ui/Sparkline.tsx';
 import { TopBar } from './ui/TopBar.tsx';
 
@@ -46,6 +47,10 @@ export function App() {
       <div className="pointer-events-none absolute left-3 top-28 flex flex-col gap-2">
         <InspectorPanel />
         <Onboarding />
+      </div>
+
+      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+        <QuestPanel />
       </div>
 
       <DesktopNotice />
