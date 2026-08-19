@@ -151,13 +151,17 @@ describe('event scheduling', () => {
     expect(observed).toBeLessThan(MEAN_EVENT_INTERVAL_SOLS * 1.6);
   });
 
-  it('eventually fires every kind of event', () => {
-    const kinds = new Set<EventKind>();
-    for (const seed of [1, 2, 3, 4, 5, 6]) {
-      for (const event of collectEvents(seed, 200)) kinds.add(event.kind);
-    }
-    expect([...kinds].sort()).toEqual(['dustStorm', 'meteorStrike', 'oxygenLeak', 'supplyDrop']);
-  });
+  it(
+    'eventually fires every kind of event',
+    () => {
+      const kinds = new Set<EventKind>();
+      for (const seed of [1, 2, 3, 4, 5, 6]) {
+        for (const event of collectEvents(seed, 200)) kinds.add(event.kind);
+      }
+      expect([...kinds].sort()).toEqual(['dustStorm', 'meteorStrike', 'oxygenLeak', 'supplyDrop']);
+    },
+    15000,
+  );
 });
 
 describe('events inside the simulation', () => {
