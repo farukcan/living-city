@@ -20,7 +20,7 @@ row below describes what was actually built, not what was first planned.
 | F-06 | Population dynamics       | No organic growth — crew arrives only by rocket; colonists above habitat capacity consume double; fractional internally, integer in the UI (test) | [x]    |
 | F-07 | Survival score            | 0..100 heuristic combining each resource's days-of-supply and the energy deficit penalty; monotonic in the obvious direction (test)              | [x]    |
 | F-08 | Deterministic RNG         | mulberry32 seeded from state; identical seed reproduces the identical event sequence (test)                                                      | [x]    |
-| F-09 | Resource history          | Ring buffer of the last 120 sols feeding the sparkline; fixed memory footprint                                                                   | [x]    |
+| F-09 | Resource history          | Ring buffer covering the last 120 sols, sampled hourly, feeding the sparkline; fixed memory footprint                                            | [x]    |
 
 ## World and Placement
 

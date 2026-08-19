@@ -15,7 +15,7 @@
 | `TEMP_NIGHT`            | −80 °C      | ambient at night                           |
 | `TARGET_TEMP`           | 20 °C       | interior setpoint                          |
 | `SURVIVAL_HORIZON_SOLS` | 30          | scale factor in the survival score         |
-| `HISTORY_SOLS`          | 120         | sparkline ring buffer length               |
+| `HISTORY_SOLS`          | 120         | sparkline history window; sampled hourly   |
 
 ## Per-Capita Consumption
 

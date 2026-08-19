@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { HOURS_PER_SOL } from '../sim/constants.ts';
 import type { HistorySample } from '../sim/types.ts';
 import { useStore } from '../state/store.ts';
 import { formatAmount } from './format.ts';
@@ -58,6 +59,13 @@ function pathFor(samples: readonly HistorySample[], key: Series['key']): string 
     .join(' ');
 }
 
+/** Hours read naturally below one sol; sols read naturally above it. */
+function historyLabel(sampleCount: number): string {
+  if (sampleCount < 2) return 'collecting…';
+  if (sampleCount < HOURS_PER_SOL) return `last ${sampleCount}h`;
+  return `last ${(sampleCount / HOURS_PER_SOL).toFixed(1)} sols`;
+}
+
 export function Sparkline() {
   const history = useStore((state) => state.ui.history);
   const resources = useStore((state) => state.ui.resources);
@@ -71,9 +79,7 @@ export function Sparkline() {
     <div className="w-[16.5rem] rounded-md border border-white/10 bg-black/40 p-2.5 backdrop-blur-sm">
       <div className="mb-1 flex items-baseline justify-between">
         <span className="text-[10px] uppercase tracking-wider text-white/50">Reserves</span>
-        <span className="text-[10px] text-white/35">
-          {history.length < 2 ? 'collecting…' : `last ${history.length} sols`}
-        </span>
+        <span className="text-[10px] text-white/35">{historyLabel(history.length)}</span>
       </div>
 
       <svg

@@ -395,11 +395,14 @@ describe('simulateTick', () => {
     }
   });
 
-  it('records history once per sol, bounded by the ring buffer', () => {
+  it('records history once per hour, bounded by the ring buffer', () => {
     const ticksPerSol = SECONDS_PER_SOL / TICK_SECONDS;
-    const state = runTicks(createColony(SEED), ticksPerSol * 3);
-    expect(state.history).toHaveLength(3);
-    expect(state.history.map((sample) => sample.sol)).toEqual([2, 3, 4]);
+    const before = createColony(SEED);
+    const hourBefore = Math.floor((before.sol + before.solTime) * HOURS_PER_SOL);
+    const state = runTicks(before, ticksPerSol * 3);
+    const hourAfter = Math.floor((state.sol + state.solTime) * HOURS_PER_SOL);
+    expect(state.history).toHaveLength(hourAfter - hourBefore);
+    expect(state.history.at(-1)?.sol).toBe(state.sol);
   });
 
   it('reports wasted power rather than silently dropping it', () => {

@@ -27,6 +27,9 @@ import type {
   TickReport,
 } from './types.ts';
 
+/** Ring buffer capacity for hourly samples spanning `HISTORY_SOLS` sols. */
+const HISTORY_SAMPLES = Math.round(HISTORY_SOLS * HOURS_PER_SOL);
+
 /**
  * A building runs only when every constraint clears. Both inputs are run flags, so the
  * product is one too: 1 × 1 is the only way to reach 1.
@@ -73,7 +76,7 @@ function pushHistory(
   sample: HistorySample,
 ): readonly HistorySample[] {
   const next = [...history, sample];
-  return next.length > HISTORY_SOLS ? next.slice(next.length - HISTORY_SOLS) : next;
+  return next.length > HISTORY_SAMPLES ? next.slice(next.length - HISTORY_SAMPLES) : next;
 }
 
 export function simulateTick(state: SimState, dtSeconds: number): SimState {
@@ -196,8 +199,14 @@ export function simulateTick(state: SimState, dtSeconds: number): SimState {
       ? [...events.notices, { kind: 'crewArrival' as const, sol, started: true }]
       : events.notices;
 
+  // Sampled hourly rather than per-sol so the sparkline stays smooth: a sol is 24.66 hours,
+  // and boundaries are compared as absolute hours rather than counted per tick since dtHours
+  // is always far smaller than one hour, so at most one boundary is ever crossed per tick.
+  const hourBefore = Math.floor((state.sol + state.solTime) * HOURS_PER_SOL);
+  const hourAfter = Math.floor((sol + solTime) * HOURS_PER_SOL);
+
   const history =
-    solsElapsed > 0
+    hourAfter > hourBefore
       ? pushHistory(state.history, {
           sol,
           power: stocks.power,
