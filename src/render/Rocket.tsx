@@ -2,13 +2,12 @@ import { useMemo, useRef } from 'react';
 import type * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { hexToWorld } from '../sim/hex.ts';
-import { LANDING_INTERVAL_SOLS } from '../sim/rocket.ts';
 import { findTile, HEX_SIZE } from '../sim/terrain.ts';
 import type { Building, TerrainField } from '../sim/types.ts';
 import { useStore } from '../state/store.ts';
 import { createBuildingMaterial, setNightFactor } from './buildingMaterial.ts';
 import { NOZZLE_Y, plumeGeometry, ROCKET_SCALE, rocketGeometry } from './geometry/rocketGeometry.ts';
-import { DESCENT_START, rocketPhase } from './rocketPhase.ts';
+import { DESCENT_START, rocketCycle, rocketPhase } from './rocketPhase.ts';
 import { tileHeight } from './Terrain.tsx';
 
 /**
@@ -53,13 +52,15 @@ export function Rocket({ field, buildings }: RocketProps) {
     const { sol, solTime } = useStore.getState().sim;
     const t = sol + solTime;
 
-    // Nothing has launched yet, so there is nothing to show but the empty pad.
-    if (t < DESCENT_START) {
+    // Nothing has launched yet this cycle, so there is nothing to show but the empty pad —
+    // except on the opening sol, where `rocketCycle` puts the founding rocket already
+    // parked (see docs/SPEC-04-rendering.md).
+    if (sol !== 1 && t < DESCENT_START) {
       group.visible = false;
       return;
     }
 
-    const phase = rocketPhase(t % LANDING_INTERVAL_SOLS);
+    const phase = rocketPhase(rocketCycle(sol, solTime));
     group.visible = phase.visible;
     if (!phase.visible) return;
 

@@ -265,6 +265,18 @@ the visual and the simulation can never disagree about when a crew arrives.
 That phase table lives in `render/rocketPhase.ts` rather than in the component, so it can be
 tested without pulling react-three-fiber into a unit test (test).
 
+Sol 1 is the one exception, and it borrows the same phase table rather than adding a second
+one. `sol` starts at 1 and `LANDING_INTERVAL_SOLS` is 7, so the real cycle's rest-and-lift-off
+window — the first `ASCENT_END` sols after a touchdown — can never fall within a fresh
+colony's opening sol, and the player would otherwise only ever find an empty pad until the
+first real landing, sols away. `rocketCycle` (also in `render/rocketPhase.ts`, and tested
+alongside it) papers over that by returning `solTime` alone while `sol === 1`: the founding
+rocket that dropped off the starting crew is still parked, then lifts off and leaves once
+`solTime` passes `REST_SOLS`. It settles back into the regular
+`(sol + solTime) % LANDING_INTERVAL_SOLS` cycle — and the empty pad it leaves behind — the
+moment `sol` ticks to 2. Nothing about crew arrival reads this branch: `crewArriving` counts
+only real `sol` boundaries, so the opening lift-off can't invent a landing.
+
 Two constraints come from the sun rig:
 
 - `ENTRY_ALTITUDE` is 12 units, held well under the directional light's ±24 shadow ortho. A

@@ -40,6 +40,21 @@ export type RocketPhase = {
 
 const HIDDEN: RocketPhase = { visible: false, altitude: 0, thrust: 0 };
 
+/**
+ * Which `rocketPhase` cycle to use for a moment in the game.
+ *
+ * The periodic `(sol + solTime) % LANDING_INTERVAL_SOLS` cycle can never fall inside a fresh
+ * colony's first sol: `sol` starts at 1, so `sol + solTime` starts already past the
+ * rest-and-lift-off window right after a touchdown. Sol 1 borrows that same window by
+ * cycling on `solTime` alone: the founding rocket that dropped off the starting crew is
+ * parked, then lifts off, before the periodic schedule — and the empty pad it leaves behind
+ * — takes back over on sol 2. `crewArriving` (`sim/rocket.ts`) reads only the raw integer
+ * `sol`, never this cycle, so the opening lift-off can't invent a landing.
+ */
+export function rocketCycle(sol: number, solTime: number): number {
+  return sol === 1 ? solTime : (sol + solTime) % LANDING_INTERVAL_SOLS;
+}
+
 /** `cycle` is sols since the last touchdown, i.e. `(sol + solTime) % LANDING_INTERVAL_SOLS`. */
 export function rocketPhase(cycle: number): RocketPhase {
   if (cycle < REST_SOLS) {
