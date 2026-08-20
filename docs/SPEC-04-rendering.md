@@ -57,6 +57,13 @@ status tint dims the emissive along with everything else, for free.
 | N8AO     | Contact shadows. Kept at low intensity: pushed harder it greys out a warm palette and reads as dirt, not depth               |
 | Bloom    | Makes emissive surfaces read as light sources. Thresholded so only genuinely emissive parts bloom; strength rises after dark |
 | Vignette | Pulls attention to the middle of the frame, where the colony is                                                              |
+| SMAA     | Edge anti-aliasing, last in the chain so it works on the finished image                                                      |
+
+The composer runs at `multisampling={0}`: MSAA makes every frame resolve a multisampled
+buffer before N8AO can read depth and normals, and on a retina display at 120 Hz that alone
+cost about a third of the frame budget — measured at ~93 fps with MSAA against a locked
+120 fps with SMAA. Frames landing off the refresh cadence are what make slow motion judder,
+so anti-aliasing belongs in the chain, not in the buffer.
 
 ## The Rendering Contract
 

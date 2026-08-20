@@ -53,7 +53,11 @@ export function Scene() {
       shadows
       // A lower camera puts the horizon in frame, which is what sells the planet.
       camera={{ position: [13, 8, 13], fov: 42 }}
-      gl={{ antialias: true, toneMappingExposure: 1.35 }}
+      // No `antialias`: PostEffects is always mounted, so the scene is drawn into the
+      // composer's own targets and the canvas only ever receives a fullscreen triangle.
+      // Context MSAA would have no geometric edge left to smooth, and would still cost a
+      // multisampled default framebuffer and a resolve every frame. SMAA does the job.
+      gl={{ toneMappingExposure: 1.35 }}
       onPointerMissed={() => setHoveredTile(null)}
     >
       {/* Fog only; the background is the sky dome, which draws its own horizon. */}
