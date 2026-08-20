@@ -26,7 +26,7 @@ row below describes what was actually built, not what was first planned.
 
 | ID   | Feature            | Acceptance criterion                                                                                                                                | Status |
 | ---- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| F-10 | Hex grid           | Axial coordinates, radius 8 → 217 tiles; neighbour and pixel conversions are correct (test)                                                         | [x]    |
+| F-10 | Hex grid           | Axial coordinates, radius 10 → 331 tiles; neighbour and pixel conversions are correct (test)                                                        | [x]    |
 | F-11 | Procedural terrain | Own value-noise implementation drives elevation plus ice and ore deposits; identical seed reproduces identical terrain (test)                       | [x]    |
 | F-12 | Building placement | Ghost preview follows the cursor, invalid tiles read red; Ice Extractor requires ice, Mine requires ore, everything else requires empty flat ground | [x]    |
 | F-13 | Demolish           | Refunds 50% of the mineral cost; the simulation rebalances on the next tick                                                                         | [x]    |

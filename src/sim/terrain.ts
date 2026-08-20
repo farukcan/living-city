@@ -10,7 +10,7 @@ import type { AxialKey } from './hex.ts';
 import { DEFAULT_FBM, fbm2d } from './noise.ts';
 import type { DepositKind, TerrainField, Tile } from './types.ts';
 
-export const GRID_RADIUS = 8;
+export const GRID_RADIUS = 10;
 export const HEX_SIZE = 1;
 export const MAX_ELEVATION = 0.6;
 export const NOISE_SCALE = 0.18;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { axialKey } from './hex.ts';
+import { axialKey, hexFieldSize } from './hex.ts';
 import { fbm2d, DEFAULT_FBM, valueNoise2d } from './noise.ts';
 import { hash2d, nextIndex, nextRandom, nextRange } from './rng.ts';
 import { findTile, generateTerrain, GRID_RADIUS } from './terrain.ts';
@@ -106,8 +106,8 @@ describe('noise', () => {
 describe('generateTerrain', () => {
   it('produces one tile per hex in the field', () => {
     const field = generateTerrain(42);
-    expect(field.tiles).toHaveLength(217);
-    expect(Object.keys(field.indexByKey)).toHaveLength(217);
+    expect(field.tiles).toHaveLength(hexFieldSize(GRID_RADIUS));
+    expect(Object.keys(field.indexByKey)).toHaveLength(hexFieldSize(GRID_RADIUS));
   });
 
   it('is deterministic in the seed', () => {

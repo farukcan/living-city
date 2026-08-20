@@ -8,6 +8,7 @@ import {
   neighborsOf,
   parseAxialKey,
 } from './hex.ts';
+import { GRID_RADIUS } from './terrain.ts';
 
 describe('axial keys', () => {
   it('round-trips through parse, including negatives', () => {
@@ -28,17 +29,18 @@ describe('axial keys', () => {
 
 describe('hexField', () => {
   it('produces 3R(R+1)+1 tiles', () => {
-    for (const radius of [0, 1, 2, 8]) {
+    for (const radius of [0, 1, 2, GRID_RADIUS]) {
       expect(hexField(radius)).toHaveLength(hexFieldSize(radius));
     }
   });
 
-  it('produces 217 tiles at the game radius', () => {
-    expect(hexField(8)).toHaveLength(217);
+  it('produces 331 tiles at the game radius', () => {
+    expect(hexField(GRID_RADIUS)).toHaveLength(331);
+    expect(hexFieldSize(GRID_RADIUS)).toBe(331);
   });
 
   it('contains no duplicates', () => {
-    const tiles = hexField(8);
+    const tiles = hexField(GRID_RADIUS);
     const keys = new Set(tiles.map((tile) => axialKey(tile.q, tile.r)));
     expect(keys.size).toBe(tiles.length);
   });

@@ -6,7 +6,7 @@ Flat-top hexes in **axial coordinates** `(q, r)`. Axial is the right choice here
 integers instead of three, trivial serialization, and neighbour lookup is a fixed table.
 
 ```
-radius 8 → 3 × 8 × 9 + 1 = 217 tiles
+radius 10 → 3 × 10 × 11 + 1 = 331 tiles
 ```
 
 Neighbours, in fixed order (used by slope calculation and flow lines):
@@ -29,7 +29,7 @@ distance(a, b) = (|Δq| + |Δq + Δr| + |Δr|) / 2
 ```
 
 Tiles are stored as a flat array with an index map from `"q,r"` keys, not a nested array —
-axial grids are not rectangular and a sparse map costs more than it saves at 217 tiles.
+axial grids are not rectangular and a sparse map costs more than it saves at 331 tiles.
 
 ## Value Noise
 

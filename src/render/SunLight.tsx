@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { SECONDS_PER_SOL } from '../sim/constants.ts';
 import { sunElevation } from '../sim/environment.ts';
 import { renderSolTime } from '../state/loop.ts';
 import { useStore } from '../state/store.ts';
@@ -41,9 +42,30 @@ const FOG_FAR_CLEAR = 165;
 const FOG_NEAR_STORM = 16;
 const FOG_FAR_STORM = 62;
 
+const SHADOW_MAP_SIZE = 4096;
+/** Half-width of the shadow ortho. Scales with GRID_RADIUS 8 → 10 so edge tiles stay inside. */
+const SHADOW_CAMERA_EXTENT = 30;
+/**
+ * World-space light travel before the depth map is redrawn.
+ *
+ * A single 1x frame at 120 Hz already moves the rig by
+ * `ORBIT_RADIUS × 2π / (SECONDS_PER_SOL × 120) ≈ 0.030`. One ortho texel is
+ * 60/4096 ≈ 0.015 — smaller than that — so a one-texel gate would keep
+ * `needsUpdate` true every frame and the flicker would remain. Seven frames
+ * of 1x travel (~0.21) is the hold: one visible step, then stable, at the
+ * same simulated rate on 60 Hz or 144 Hz.
+ */
+const SHADOW_MOVE =
+  ((ORBIT_RADIUS * 2 * Math.PI) / (SECONDS_PER_SOL * 120)) * 7;
+const SHADOW_MOVE_SQ = SHADOW_MOVE * SHADOW_MOVE;
+
 export function SunLight() {
   const lightRef = useRef<THREE.DirectionalLight>(null);
   const ambientRef = useRef<THREE.HemisphereLight>(null);
+  // Per-mount, not module-level: a remounted light has an empty map and must refresh
+  // even if the sun has not moved since the previous instance wrote this.
+  const lastShadowPosition = useRef(new THREE.Vector3(Number.POSITIVE_INFINITY, 0, 0));
+  const lastBuildings = useRef<unknown>(null);
 
   // The scene comes from the frame state rather than a captured `useThree` value: mutating
   // a value closed over from render is what the compiler rules (rightly) object to.
@@ -68,6 +90,17 @@ export function SunLight() {
       light.intensity = 0.15 + sunIntensity * 2.6 * dustFactor;
       // Low sun reads warm, high sun reads neutral-cold: the cheapest possible sunrise.
       light.color.copy(SUN_COLD).lerp(SUN_WARM, 1 - Math.min(1, sunIntensity * 1.6));
+      // Position still advances every frame so N·L stays smooth; only the depth map
+      // (and its matrix) hold. They stay in lockstep because Three skips both when
+      // `needsUpdate` is false. Building-list identity also dirties the map so a
+      // placement while paused still casts a shadow.
+      const sunMoved = light.position.distanceToSquared(lastShadowPosition.current) >= SHADOW_MOVE_SQ;
+      const buildingsMoved = sim.buildings !== lastBuildings.current;
+      if (sunMoved || buildingsMoved) {
+        if (sunMoved) lastShadowPosition.current.copy(light.position);
+        lastBuildings.current = sim.buildings;
+        light.shadow.needsUpdate = true;
+      }
     }
 
     const storminess = 1 - dustFactor;
@@ -100,27 +133,24 @@ export function SunLight() {
         ref={lightRef}
         intensity={2.2}
         castShadow
-        // 3072, not 2048: a shadow is sampled from this grid, so its edge cannot move
-        // smoothly — it holds still until the sun has turned far enough to cross a texel,
-        // then jumps a whole one. At 1x that works out to roughly a seventh of a texel per
-        // frame, i.e. hold for seven frames and jump, which is exactly the stepped crawl
-        // this is tuned against. A finer grid makes the jumps smaller and more frequent
-        // until they stop reading as steps. 4096 is finer still, but measured 104 fps
-        // against a locked 120 — it buys smoother shadows by reintroducing the dropped
-        // frames that PostEffects was just tuned to eliminate, which is a bad trade.
-        shadow-mapSize={[3072, 3072]}
+        // The map is not redrawn every frame — see SHADOW_MOVE_SQ. Without this, Three
+        // would rebuild it whenever the light moved, which is every frame.
+        shadow-autoUpdate={false}
+        // 4096: a shadow edge lives on this grid, so when the map *does* refresh
+        // the jump is one texel. The larger board (frustum ±30) would coarsen a
+        // 3072 map; 4096 keeps world-texel size about where 3072/±24 was.
+        shadow-mapSize={[SHADOW_MAP_SIZE, SHADOW_MAP_SIZE]}
         shadow-camera-near={1}
         shadow-camera-far={90}
-        shadow-camera-left={-24}
-        shadow-camera-right={24}
-        shadow-camera-top={24}
-        shadow-camera-bottom={-24}
+        shadow-camera-left={-SHADOW_CAMERA_EXTENT}
+        shadow-camera-right={SHADOW_CAMERA_EXTENT}
+        shadow-camera-top={SHADOW_CAMERA_EXTENT}
+        shadow-camera-bottom={-SHADOW_CAMERA_EXTENT}
         shadow-bias={-0.0012}
-        // One shadow texel is 48/3072 ≈ 0.016 world units, and the light turns every frame
-        // rather than holding for six (see renderSolTime in loop.ts). A normal offset under
-        // one texel leaves sloped faces — the solar panels worst of all — re-sampling the
-        // wrong texel each frame, which reads as crawling shadow acne. Three texels' worth
-        // clears it here.
+        // One shadow texel is 60/4096 ≈ 0.015 world units. A normal offset under one
+        // texel leaves sloped faces — the solar panels worst of all — sampling the
+        // neighbouring cell, which reads as acne even on a held map. Three texels'
+        // worth clears it here.
         shadow-normalBias={0.05}
       />
     </>

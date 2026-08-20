@@ -90,9 +90,9 @@ slabs, placement ghosts) needs the same rotation.
 
 | Mesh           | Instances             | Draw calls           |
 | -------------- | --------------------- | -------------------- |
-| Hex ground     | 217, split by deposit | 3 (rock / ice / ore) |
-| Rock outcrops  | ~40                   | 1                    |
-| Pebble scatter | ~300                  | 1                    |
+| Hex ground     | 331, split by deposit | 3 (rock / ice / ore) |
+| Rock outcrops  | ~60                   | 1                    |
+| Pebble scatter | ~450                  | 1                    |
 | Distant hills  | 46                    | 1                    |
 | Buildings      | up to ~200            | 1 per type in use    |
 | Pipes          | one per link          | 1                    |
@@ -111,7 +111,7 @@ deliberate exceptions.
 
 Each building is composed from primitives in `render/geometry/buildingGeometry.ts`, merged
 into one `BufferGeometry` per type at startup. The design rule is **silhouette first**:
-at the default zoom a building is roughly 60 px tall, so each type must be identifiable by
+at the default zoom a building is roughly 40 px tall, so each type must be identifiable by
 outline alone, before colour. Detail below that threshold — panel cells, hull ribs, banding
 — exists for when the player zooms in, and costs nothing extra at distance because it is
 all one mesh.
@@ -210,14 +210,15 @@ flowchart LR
 
 - One `directionalLight` arcing across the sky, casting shadows; a dim hemisphere light
   fills the shadows so the night side never goes fully black.
-- Shadow map 3072², ortho frustum ±24, re-rendered every frame along with the light.
-  The resolution is a judder setting, not a sharpness one: a shadow edge is sampled from
-  this grid, so it cannot slide smoothly — it holds until the sun has turned far enough to
-  cross a texel, then jumps a whole one. At 1x that is about a seventh of a texel per frame
-  (hold seven frames, jump one), which reads as a stepped crawl even though the light itself
-  moves continuously. Finer grids make the jump smaller and more frequent until it stops
-  reading as a step; 4096 does this better still but drops the renderer from a locked 120 fps
-  to ~104, trading one source of judder for another.
+- Shadow map 4096², ortho frustum ±30 (scaled with the radius-10 board). The light's
+  position still advances every frame (`renderSolTime()`), so lighting stays smooth, but
+  `shadow.autoUpdate` is off and the depth map is redrawn only after the light has
+  travelled ~0.21 world units — seven frames of 1x motion at 120 Hz, the same simulated
+  cadence on any refresh rate. A one-texel Euclidean gate (~0.015) is smaller than a
+  single 1x frame (~0.030), so it would never hold. Updating every frame rasterises the
+  depth pass onto a slightly different grid each time, which reads as flicker; holding
+  then jumping is policy. The map is also dirtied when the building list changes, so a
+  placement while paused still casts a shadow.
 - Sky and fog colours lerp on sun intensity. During a dust storm both shift toward
   `#C1553A` and fog density roughly doubles — the storm is sold by the atmosphere, not by
   particles.
@@ -297,7 +298,7 @@ only real `sol` boundaries, so the opening lift-off can't invent a landing.
 
 Two constraints come from the sun rig:
 
-- `ENTRY_ALTITUDE` is 12 units, held well under the directional light's ±24 shadow ortho. A
+- `ENTRY_ALTITUDE` is 12 units, held well under the directional light's ±30 shadow ortho. A
   higher spawn leaves the shadow frustum at low sun angles and its shadow silently stops
   rendering.
 - The rocket casts a shadow only while it is on the pad. A hard shadow thrown from twelve
@@ -331,6 +332,7 @@ stay with the structural `useLayoutEffect` that runs on building-list changes.
 | ----------- | ------------------------------------------------------------------ |
 | Polar angle | 0.15π .. 0.45π (never below the horizon, never straight down)      |
 | Distance    | 8 .. 45                                                            |
+| Default     | `[18.2, 11.2, 18.2]` — 40% further than the original framing       |
 | Target      | clamped to the grid bounds so the colony cannot be lost off-screen |
 | Damping     | 0.08                                                               |
 

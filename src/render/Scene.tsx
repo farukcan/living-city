@@ -52,7 +52,8 @@ export function Scene() {
     <Canvas
       shadows
       // A lower camera puts the horizon in frame, which is what sells the planet.
-      camera={{ position: [13, 8, 13], fov: 42 }}
+      // 40% further than the original [13, 8, 13] so the larger board reads at first glance.
+      camera={{ position: [18.2, 11.2, 18.2], fov: 42 }}
       // No `antialias`: PostEffects is always mounted, so the scene is drawn into the
       // composer's own targets and the canvas only ever receives a fullscreen triangle.
       // Context MSAA would have no geometric edge left to smooth, and would still cost a

@@ -15,9 +15,9 @@ export const ASCENT_SOLS = 0.3;
 /**
  * How high the rocket appears from and vanishes to.
  *
- * Capped well under the sun's ±24-unit shadow ortho: past that the rocket's shadow leaves
+ * Capped well under the sun's ±30-unit shadow ortho: past that the rocket's shadow leaves
  * the frustum at low sun angles and silently stops rendering. Twelve units still reads as
- * "arriving from orbit" against a camera sitting about nineteen units out.
+ * "arriving from orbit" against a camera sitting about twenty-eight units out.
  */
 export const ENTRY_ALTITUDE = 12;
 

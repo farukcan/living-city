@@ -56,7 +56,7 @@ describe('rocketPhase', () => {
   });
 
   it('stays inside the sun rig’s shadow frustum at every point in the cycle', () => {
-    // The directional light's ortho box is ±24; a rocket above that loses its shadow.
+    // The directional light's ortho box is ±30; a rocket above that loses its shadow.
     for (let t = 0; t < LANDING_INTERVAL_SOLS; t += 0.01) {
       expect(rocketPhase(t).altitude).toBeLessThanOrEqual(ENTRY_ALTITUDE);
       expect(rocketPhase(t).altitude).toBeGreaterThanOrEqual(0);
