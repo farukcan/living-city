@@ -254,7 +254,12 @@ All three follow the same three rules, and anything added here must too:
 3. Drive the phase from the **simulation** clock — `sol + solTime` for a cycle that spans
    several sols (the rocket), `solTime` alone for anything that simply repeats every sol (the
    sun, and the arrays that track it). Pausing then freezes the animation and 16× speeds it
-   up, both for free.
+   up, both for free. Take `solTime` from `renderSolTime()` (docs/SPEC-05-state.md), never
+   from `sim.solTime`: the simulation ticks at 10 Hz, so the raw value holds still for a
+   dozen render frames and then jumps. `FlowPackets` is the one exception, and a deliberate
+   one — it rides `state.clock.elapsedTime`, a wall clock, because a packet is a "this link
+   is running" indicator rather than a scheduled event, and freezing the whole colony's
+   plumbing on pause would read as a stall rather than as a pause.
 
 ### The rocket
 

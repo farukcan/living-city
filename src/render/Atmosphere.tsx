@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { hash2d } from '../sim/rng.ts';
+import { renderSolTime } from '../state/loop.ts';
 import { useStore } from '../state/store.ts';
 import { PALETTE } from './palette.ts';
 
@@ -120,8 +121,9 @@ export function SkyDome() {
     uniforms.uHorizon.value.copy(scratchHorizon);
     uniforms.uSunStrength.value = sunIntensity * dustFactor;
 
-    // Matches the light rig in SunLight so the glow sits where the shadows say it should.
-    const sweep = 2 * Math.PI * (sim.solTime - 0.25);
+    // Matches the light rig in SunLight so the glow sits where the shadows say it should —
+    // same interpolated solTime, not the raw 10 Hz sim value.
+    const sweep = 2 * Math.PI * (renderSolTime() - 0.25);
     uniforms.uSunDirection.value
       .set(Math.cos(sweep), Math.max(0.02, Math.sin(sweep)), Math.sin(sweep) * 0.35)
       .normalize();

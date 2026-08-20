@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { hexToWorld } from '../sim/hex.ts';
 import { findTile, HEX_SIZE } from '../sim/terrain.ts';
 import type { Building, TerrainField } from '../sim/types.ts';
+import { renderSolTime } from '../state/loop.ts';
 import { useStore } from '../state/store.ts';
 import { createBuildingMaterial, setNightFactor } from './buildingMaterial.ts';
 import { NOZZLE_Y, plumeGeometry, ROCKET_SCALE, rocketGeometry } from './geometry/rocketGeometry.ts';
@@ -49,7 +50,10 @@ export function Rocket({ field, buildings }: RocketProps) {
     const group = groupRef.current;
     if (!group || pad === null) return;
 
-    const { sol, solTime } = useStore.getState().sim;
+    const { sol } = useStore.getState().sim;
+    // Interpolated, not sim.solTime directly: the sim ticks at 10 Hz, and reading it straight
+    // holds the rocket at one altitude for several render frames and then jumps — see loop.ts.
+    const solTime = renderSolTime();
     const t = sol + solTime;
 
     // Nothing has launched yet this cycle, so there is nothing to show but the empty pad —

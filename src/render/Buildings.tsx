@@ -5,6 +5,7 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { hexToWorld } from '../sim/hex.ts';
 import { findTile, HEX_SIZE } from '../sim/terrain.ts';
 import type { Building, BuildingKind, TerrainField } from '../sim/types.ts';
+import { renderSolTime } from '../state/loop.ts';
 import { useStore } from '../state/store.ts';
 import { createBuildingMaterial, setNightFactor } from './buildingMaterial.ts';
 import { buildingGeometry } from './geometry/buildingGeometry.ts';
@@ -111,8 +112,8 @@ function BuildingCluster({ kind, field, buildings, onSelect }: ClusterProps) {
     // and the bounding sphere (both rotation-invariant) stay with the structural effect
     // below. Mirrors `FlowPackets` in Pipelines.tsx, the codebase's other per-frame
     // instanced mesh.
-    const { solTime } = useStore.getState().sim;
-    const yaw = solarPanelYaw(solTime);
+    // Interpolated, not sim.solTime directly — see loop.ts.
+    const yaw = solarPanelYaw(renderSolTime());
     placements.forEach((placement, index) => {
       const building = buildings[index];
       if (!building) return;

@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { sunElevation } from '../sim/environment.ts';
+import { renderSolTime } from '../state/loop.ts';
 import { useStore } from '../state/store.ts';
 import { PALETTE } from './palette.ts';
 
@@ -48,8 +49,10 @@ export function SunLight() {
   // a value closed over from render is what the compiler rules (rightly) object to.
   useFrame(({ scene }) => {
     const { sim } = useStore.getState();
-    const { solTime } = sim;
     const { sunIntensity, dustFactor } = sim.report.environment;
+    // Interpolated, not sim.solTime directly: the sim ticks at 10 Hz, and reading it straight
+    // holds the sun still for several frames between ticks and snaps — see loop.ts.
+    const solTime = renderSolTime();
 
     // Elevation drives height, the sol angle drives the east-to-west sweep. Below the
     // horizon the light is parked rather than removed, so nothing pops when it returns.

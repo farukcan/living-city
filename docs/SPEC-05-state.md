@@ -84,6 +84,12 @@ flowchart TD
   (an ever-growing accumulator) locks the browser.
 - The loop lives outside React, driven by a single `requestAnimationFrame` chain started
   once on mount.
+- **`renderSolTime()`** is the clock the renderer reads, not `sim.solTime`. A tick is 0.1 s,
+  so on a 120 Hz display `sim.solTime` holds still for a dozen frames and then jumps —
+  visible judder on anything that moves slowly, worst at 1x. `renderSolTime()` carries
+  `sim.solTime` forward by the fraction of a tick already in the accumulator, so it advances
+  every animation frame and collapses back onto `sim.solTime` exactly on tick. It is
+  presentation only: nothing in `src/sim/` ever sees it, so determinism is untouched.
 
 ## Frame Profiler
 
