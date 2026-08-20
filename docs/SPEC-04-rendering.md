@@ -210,8 +210,14 @@ flowchart LR
 
 - One `directionalLight` arcing across the sky, casting shadows; a dim hemisphere light
   fills the shadows so the night side never goes fully black.
-- Shadow map 2048², frustum fitted to the colony bounds, updated only when the sun moves
-  past a threshold rather than every frame.
+- Shadow map 3072², ortho frustum ±24, re-rendered every frame along with the light.
+  The resolution is a judder setting, not a sharpness one: a shadow edge is sampled from
+  this grid, so it cannot slide smoothly — it holds until the sun has turned far enough to
+  cross a texel, then jumps a whole one. At 1x that is about a seventh of a texel per frame
+  (hold seven frames, jump one), which reads as a stepped crawl even though the light itself
+  moves continuously. Finer grids make the jump smaller and more frequent until it stops
+  reading as a step; 4096 does this better still but drops the renderer from a locked 120 fps
+  to ~104, trading one source of judder for another.
 - Sky and fog colours lerp on sun intensity. During a dust storm both shift toward
   `#C1553A` and fog density roughly doubles — the storm is sold by the atmosphere, not by
   particles.

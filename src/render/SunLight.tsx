@@ -100,7 +100,15 @@ export function SunLight() {
         ref={lightRef}
         intensity={2.2}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        // 3072, not 2048: a shadow is sampled from this grid, so its edge cannot move
+        // smoothly — it holds still until the sun has turned far enough to cross a texel,
+        // then jumps a whole one. At 1x that works out to roughly a seventh of a texel per
+        // frame, i.e. hold for seven frames and jump, which is exactly the stepped crawl
+        // this is tuned against. A finer grid makes the jumps smaller and more frequent
+        // until they stop reading as steps. 4096 is finer still, but measured 104 fps
+        // against a locked 120 — it buys smoother shadows by reintroducing the dropped
+        // frames that PostEffects was just tuned to eliminate, which is a bad trade.
+        shadow-mapSize={[3072, 3072]}
         shadow-camera-near={1}
         shadow-camera-far={90}
         shadow-camera-left={-24}
@@ -108,7 +116,12 @@ export function SunLight() {
         shadow-camera-top={24}
         shadow-camera-bottom={-24}
         shadow-bias={-0.0012}
-        shadow-normalBias={0.02}
+        // One shadow texel is 48/3072 ≈ 0.016 world units, and the light turns every frame
+        // rather than holding for six (see renderSolTime in loop.ts). A normal offset under
+        // one texel leaves sloped faces — the solar panels worst of all — re-sampling the
+        // wrong texel each frame, which reads as crawling shadow acne. Three texels' worth
+        // clears it here.
+        shadow-normalBias={0.05}
       />
     </>
   );
