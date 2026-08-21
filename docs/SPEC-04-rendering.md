@@ -356,8 +356,10 @@ explicit rather than inherited.
 **F3** opens the profiler overlay: 30 s graphs of fps, draw calls and — on Chromium — JS
 heap, plus the worst frame of the last 250 ms and the triangle count as plain readouts. Only
 the fps track carries a dashed reference line, at the 60 fps target. Sampling lives in
-`src/state/profiler.ts` (docs/SPEC-05-state.md); `RenderStatsProbe` reads the counters out of
-`WebGLRenderer.info` and mounts only while the overlay is open.
+`src/state/profiler.ts` (docs/SPEC-05-state.md). FPS is counted by `FrameSampler` from the
+Canvas `useFrame` loop — the simulation rAF is a separate chain and is not what is on
+screen. `RenderStatsProbe` reads draw calls and triangles out of `WebGLRenderer.info` and
+mounts only while the overlay is open.
 
 The draw-call figure is the **whole frame**: the shadow pass and every post-processing pass
 count alongside the scene, which is why the number sits nearer 70 than the < 20 in the table

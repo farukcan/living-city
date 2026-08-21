@@ -9,7 +9,6 @@
 import { SECONDS_PER_SOL, TICK_SECONDS } from '../sim/constants.ts';
 import { simulateTick } from '../sim/tick.ts';
 import { save } from './persistence.ts';
-import { recordFrame } from './profiler.ts';
 import { useStore } from './store.ts';
 
 /**
@@ -70,10 +69,6 @@ export function startLoop(): () => void {
 
     const previous = lastTimestamp ?? timestamp;
     lastTimestamp = timestamp;
-
-    // R3F drives its own chain for rendering; this is the one the app owns, and both are
-    // paced by the same display refresh, so it is a faithful frame clock.
-    recordFrame(timestamp);
 
     const store = useStore.getState();
     const { speed } = store.interaction;

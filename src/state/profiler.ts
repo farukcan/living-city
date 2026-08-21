@@ -72,8 +72,10 @@ function publish(sample: ProfilerSample): void {
 }
 
 /**
- * Called once per animation frame by the loop. Cheap enough to run whether or not the panel
- * is open, which is what lets the panel show 30 s of history the moment it is opened.
+ * Called once per presented frame by `FrameSampler` (inside the Canvas). Cheap enough to
+ * run whether or not the panel is open, which is what lets the panel show 30 s of history
+ * the moment it is opened. Do not call this from the simulation rAF — that chain is not
+ * the one that paints.
  */
 export function recordFrame(timestampMs: number): void {
   const previous = lastFrameAtMs;
@@ -122,6 +124,21 @@ export function recordRenderStats(drawCalls: number, triangles: number): void {
  * published as if they were live, drawing a flat line through a period nothing was measured.
  */
 export function clearRenderStats(): void {
+  lastDrawCalls = null;
+  lastTriangles = null;
+}
+
+/** Test-only: wipe the ring and the in-flight window so cases cannot leak into each other. */
+export function resetProfiler(): void {
+  ring.length = 0;
+  writeIndex = 0;
+  version++;
+  cachedVersion = -1;
+  cached = [];
+  lastFrameAtMs = null;
+  windowStartMs = 0;
+  windowFrames = 0;
+  windowWorstFrameMs = 0;
   lastDrawCalls = null;
   lastTriangles = null;
 }

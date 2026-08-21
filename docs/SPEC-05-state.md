@@ -100,11 +100,14 @@ and `simulateTick` has to stay pure over.
 
 ```mermaid
 flowchart LR
-    LOOP[loop.ts · rAF] -->|recordFrame timestamp| PROF[(profiler ring buffer)]
+    SAMPLE[FrameSampler · useFrame] -->|recordFrame timestamp| PROF[(profiler ring buffer)]
     PROBE[RenderStatsProbe · useFrame] -->|recordRenderStats calls, tris| PROF
     PROF -->|notify every 250 ms| PANEL[ProfilerPanel · useSyncExternalStore]
 ```
 
+- **Presented frames, not the sim loop.** FPS is sampled inside the Canvas by `FrameSampler`.
+  R3F drives Three's `setAnimationLoop`; `loop.ts` has its own `requestAnimationFrame`. Those
+  two chains can tick at different rates, and the sim loop is not what is on screen.
 - **Windowed, not per-frame:** one sample per 250 ms carrying average fps and the _worst_
   frame of the window. A mean of 16 ms hides a 90 ms hitch, and a React update per frame
   would cost more than the thing it measures.

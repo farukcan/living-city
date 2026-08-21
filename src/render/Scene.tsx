@@ -8,6 +8,7 @@ import { useStore } from '../state/store.ts';
 import { DistantHills, GroundPlane, SkyDome } from './Atmosphere.tsx';
 import { Buildings } from './Buildings.tsx';
 import { CameraRig } from './CameraRig.tsx';
+import { FrameSampler } from './FrameSampler.tsx';
 import { Pipelines } from './Pipelines.tsx';
 import { PALETTE } from './palette.ts';
 import { PlacementGhost } from './PlacementGhost.tsx';
@@ -84,6 +85,7 @@ export function Scene() {
 
       <CameraRig gridRadius={terrain.radius} />
       <PostEffects />
+      <FrameSampler />
       {/* Mounted only while the overlay is open, so a closed panel costs nothing. */}
       {showProfiler ? <RenderStatsProbe /> : null}
     </Canvas>
