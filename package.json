@@ -1,5 +1,5 @@
 {
-  "name": "living-machine",
+  "name": "living-mars-machine",
   "version": "0.1.0",
   "description": "Mars colony simulator — a deterministic resource simulation rendered in the browser",
   "directories": {

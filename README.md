@@ -1,4 +1,4 @@
-# Living Machine — Mars Colony Simulator
+# Living Mars Machine — Mars Colony Simulator
 
 A browser Mars colony that runs itself: place buildings on procedurally generated hex
 terrain and watch a deterministic stock-and-flow simulation redistribute power, water,

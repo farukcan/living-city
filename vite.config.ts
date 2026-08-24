@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 // `base` targets GitHub Pages project hosting (/<repo>/). Local dev and preview
 // serve from the same path, so a broken asset URL shows up before deployment.
 export default defineConfig({
-  base: process.env.GITHUB_PAGES === 'true' ? '/living-city/' : '/',
+  base: process.env.GITHUB_PAGES === 'true' ? '/living-mars-machine/' : '/',
   plugins: [react(), tailwindcss()],
   build: {
     rolldownOptions: {

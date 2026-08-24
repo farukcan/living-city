@@ -187,7 +187,7 @@ code now agrees, and every consumer of that map is spared a status re-check.
 - [x] Docs reconciled with shipped behaviour
 
 **Verify:** ✅ 86 unit tests, 10 e2e tests, clean typecheck and lint. Production build
-serves correctly under the `/living-city/` base path.
+serves correctly under the `/living-mars-machine/` base path.
 
 **Measured tick cost** (2000 ticks per row, after warm-up):
 
