@@ -8,7 +8,7 @@ import type { Building, BuildingKind, TerrainField } from '../sim/types.ts';
 import { renderSolTime } from '../state/loop.ts';
 import { useStore } from '../state/store.ts';
 import { createBuildingMaterial, setNightFactor } from './buildingMaterial.ts';
-import { buildingGeometry } from './geometry/buildingGeometry.ts';
+import { buildingGeometry, solarArrayBase, solarArrayHead } from './geometry/buildingGeometry.ts';
 import { solarPanelYaw } from './solarTracking.ts';
 import { tileHeight } from './Terrain.tsx';
 
@@ -17,7 +17,8 @@ import { tileHeight } from './Terrain.tsx';
  *
  * Matrices and status tints are rewritten only when the building list changes — a user
  * action — never on a simulation tick. Solar arrays are the one exception: their yaw is
- * rewritten every frame to track the sun (see **Animated Objects** in the spec).
+ * rewritten every frame to track the sun (see **Animated Objects** in the spec). An array
+ * is therefore drawn as two meshes — a static pedestal and a head that turns on it.
  */
 
 const scratchObject = new THREE.Object3D();
@@ -80,11 +81,48 @@ type ClusterProps = {
 /** A building's ground placement, independent of its per-frame rotation. */
 type Placement = { readonly x: number; readonly y: number; readonly z: number };
 
+/**
+ * Writes every instance's transform. Colour and bounds are left alone, because this also
+ * runs per frame for the tracking arrays and neither changes with yaw.
+ */
+function writeMatrices(
+  mesh: THREE.InstancedMesh,
+  placements: readonly Placement[],
+  buildings: readonly Building[],
+  yaw: number,
+): void {
+  placements.forEach((placement, index) => {
+    const building = buildings[index];
+    if (!building) return;
+    scratchObject.position.set(placement.x, placement.y, placement.z);
+    scratchObject.scale.setScalar(BUILDING_SCALE);
+    // A slight lean sells the damage without a separate mesh.
+    scratchObject.rotation.set(0, yaw, building.status === 'damaged' ? 0.14 : 0);
+    scratchObject.updateMatrix();
+    mesh.setMatrixAt(index, scratchObject.matrix);
+  });
+  scratchObject.rotation.set(0, 0, 0);
+  mesh.instanceMatrix.needsUpdate = true;
+}
+
+/** Status tint and instance count, which only a structural change can alter. */
+function writeStatus(mesh: THREE.InstancedMesh, buildings: readonly Building[]): void {
+  buildings.forEach((building, index) => mesh.setColorAt(index, STATUS_TINT[building.status]));
+  mesh.count = buildings.length;
+  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  mesh.computeBoundingSphere();
+}
+
 function BuildingCluster({ kind, field, buildings, onSelect }: ClusterProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const geometry = useMemo(() => buildingGeometry(kind), [kind]);
-  const material = useMemo(() => createBuildingMaterial(), []);
+  const headRef = useRef<THREE.InstancedMesh>(null);
   const isSolarArray = kind === 'solarArray';
+  const geometry = useMemo(
+    () => (isSolarArray ? solarArrayBase() : buildingGeometry(kind)),
+    [kind, isSolarArray],
+  );
+  const headGeometry = useMemo(() => (isSolarArray ? solarArrayHead() : null), [isSolarArray]);
+  const material = useMemo(() => createBuildingMaterial(), []);
 
   // Ground position only changes when the building list or terrain does, so it is cached
   // here rather than re-derived from the hex grid every frame for the tracking arrays.
@@ -105,49 +143,29 @@ function BuildingCluster({ kind, field, buildings, onSelect }: ClusterProps) {
     setNightFactor(material, 1 - Math.min(1, sunIntensity * 1.6));
     if (!isSolarArray) return;
 
-    const mesh = meshRef.current;
-    if (!mesh) return;
+    const head = headRef.current;
+    if (!head) return;
 
-    // Only the yaw changes frame to frame, so only the matrix is rewritten here — colour
-    // and the bounding sphere (both rotation-invariant) stay with the structural effect
-    // below. Mirrors `FlowPackets` in Pipelines.tsx, the codebase's other per-frame
-    // instanced mesh.
+    // Only the head turns: the pedestal and mast it stands on keep the matrices written by
+    // the structural effect below. Only the matrix is rewritten here — colour and the
+    // bounding sphere are both rotation-invariant. Mirrors `FlowPackets` in Pipelines.tsx,
+    // the codebase's other per-frame instanced mesh.
     // Interpolated, not sim.solTime directly — see loop.ts.
-    const yaw = solarPanelYaw(renderSolTime());
-    placements.forEach((placement, index) => {
-      const building = buildings[index];
-      if (!building) return;
-      scratchObject.position.set(placement.x, placement.y, placement.z);
-      scratchObject.scale.setScalar(BUILDING_SCALE);
-      scratchObject.rotation.set(0, yaw, building.status === 'damaged' ? 0.14 : 0);
-      scratchObject.updateMatrix();
-      mesh.setMatrixAt(index, scratchObject.matrix);
-    });
-    mesh.instanceMatrix.needsUpdate = true;
+    writeMatrices(head, placements, buildings, solarPanelYaw(renderSolTime()));
   });
 
   useLayoutEffect(() => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
-    placements.forEach((placement, index) => {
-      const building = buildings[index];
-      if (!building) return;
-      scratchObject.position.set(placement.x, placement.y, placement.z);
-      scratchObject.scale.setScalar(BUILDING_SCALE);
-      // A slight lean sells the damage without a separate mesh.
-      scratchObject.rotation.set(0, 0, building.status === 'damaged' ? 0.14 : 0);
-      scratchObject.updateMatrix();
-      mesh.setMatrixAt(index, scratchObject.matrix);
-      mesh.setColorAt(index, STATUS_TINT[building.status]);
-    });
+    writeMatrices(mesh, placements, buildings, 0);
+    writeStatus(mesh, buildings);
 
-    scratchObject.rotation.set(0, 0, 0);
-    mesh.count = buildings.length;
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    mesh.computeBoundingSphere();
-  }, [placements, buildings, geometry]);
+    const head = headRef.current;
+    if (!head) return;
+    writeMatrices(head, placements, buildings, 0);
+    writeStatus(head, buildings);
+  }, [placements, buildings, geometry, headGeometry]);
 
   const handleHover = (event: ThreeEvent<PointerEvent>) => {
     if (event.instanceId === undefined) return;
@@ -169,16 +187,32 @@ function BuildingCluster({ kind, field, buildings, onSelect }: ClusterProps) {
     onSelect(building.id);
   };
 
+  // The head carries the same handlers as the base: clicking a panel has to select the
+  // array it belongs to, and instance indices line up between the two meshes.
   return (
-    <instancedMesh
-      key={`${kind}-${buildings.length}`}
-      ref={meshRef}
-      args={[geometry, material, Math.max(1, buildings.length)]}
-      castShadow
-      receiveShadow
-      onClick={handleClick}
-      onPointerMove={handleHover}
-      onPointerOut={() => useStore.getState().setHoveredBuilding(null)}
-    />
+    <>
+      <instancedMesh
+        key={`${kind}-${buildings.length}`}
+        ref={meshRef}
+        args={[geometry, material, Math.max(1, buildings.length)]}
+        castShadow
+        receiveShadow
+        onClick={handleClick}
+        onPointerMove={handleHover}
+        onPointerOut={() => useStore.getState().setHoveredBuilding(null)}
+      />
+      {headGeometry && (
+        <instancedMesh
+          key={`${kind}-head-${buildings.length}`}
+          ref={headRef}
+          args={[headGeometry, material, Math.max(1, buildings.length)]}
+          castShadow
+          receiveShadow
+          onClick={handleClick}
+          onPointerMove={handleHover}
+          onPointerOut={() => useStore.getState().setHoveredBuilding(null)}
+        />
+      )}
+    </>
   );
 }

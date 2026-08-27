@@ -10,9 +10,9 @@ import * as THREE from 'three';
 import { assemble, box, cylinder } from './primitives.ts';
 
 /**
- * Applied to both meshes below. At this scale the rocket stands about 1.9 units tall —
- * taller than the ice extractor, the tallest building — while staying 0.64 wide, well inside
- * the width a single hex can hold.
+ * Applied to both meshes below. At this scale the rocket stands about 2.0 units tall —
+ * taller than the ice extractor, the tallest building — while staying 0.83 wide across the
+ * fins, well inside the width a single hex can hold.
  */
 export const ROCKET_SCALE = 1.6;
 
@@ -21,31 +21,54 @@ export const NOZZLE_Y = -0.12;
 
 const FIN_COUNT = 3;
 
+/** How far the fins lean: base flared out, tip tucked in. */
+const FIN_SWEEP = -0.34;
+
 let rocketCache: THREE.BufferGeometry | null = null;
 let plumeCache: THREE.BufferGeometry | null = null;
 
 /**
- * A capsule on a bell with three fins. Read against the colony's domes and slabs it is the
- * only vertical, tapered silhouette on the map, so it is unmistakable even at altitude.
+ * A two-stage ogive nose on a tapered hull, standing on three swept fins around a flared
+ * engine skirt. Read against the colony's domes and slabs it is the only vertical, tapered
+ * silhouette on the map, so it is unmistakable even at altitude.
  */
 export function rocketGeometry(): THREE.BufferGeometry {
   if (rocketCache) return rocketCache;
 
-  const fins = Array.from({ length: FIN_COUNT }, (_unused, index) =>
-    box(
-      [0.04, 0.3, 0.22],
-      { y: 0.18, z: 0.18, ry: (index * Math.PI * 2) / FIN_COUNT },
-      { material: 'frameDark' },
-    ),
-  );
+  // Each fin is rotated into its sweep first, then spun around the hull — and its offset
+  // has to be spun with it, because `place` translates in world space after rotating.
+  const fins = Array.from({ length: FIN_COUNT }, (_unused, index) => {
+    const yaw = (index * Math.PI * 2) / FIN_COUNT;
+    return box(
+      [0.05, 0.42, 0.24],
+      {
+        x: Math.sin(yaw) * 0.18,
+        y: 0.22,
+        z: Math.cos(yaw) * 0.18,
+        rx: FIN_SWEEP,
+        ry: yaw,
+      },
+      { material: 'frame' },
+    );
+  });
 
   rocketCache = assemble([
-    cylinder(0.16, 0.2, 0.9, 12, { y: 0.45 }, { material: 'shell' }),
-    cylinder(0.02, 0.16, 0.34, 12, { y: 1.07 }, { material: 'shellDark' }),
+    cylinder(0.18, 0.22, 0.8, 12, { y: 0.45 }, { material: 'shell' }),
+    cylinder(0.135, 0.185, 0.2, 12, { y: 0.94 }, { material: 'shell' }),
+    cylinder(0.015, 0.135, 0.24, 12, { y: 1.14 }, { material: 'shell' }),
+    // Livery band between two dark seams, and a lower hull ring: the markings that keep
+    // the hull from reading as one long extrusion.
+    cylinder(0.19, 0.195, 0.1, 12, { y: 0.78 }, { material: '#F2EEE6' }),
+    ...[0.725, 0.835].map((y) =>
+      cylinder(0.194, 0.194, 0.02, 12, { y }, { material: 'frameDark' }),
+    ),
+    cylinder(0.2, 0.2, 0.045, 12, { y: 0.24 }, { material: 'frameDark' }),
     // Lit by the same aGlow path the habitat windows use, so a night landing shows a crew
     // aboard without a second material.
-    cylinder(0.165, 0.165, 0.08, 12, { y: 0.7 }, { material: '#8FE3F5', glow: 1 }),
-    cylinder(0.2, 0.12, 0.12, 12, { y: -0.06 }, { material: 'frameDark' }),
+    cylinder(0.183, 0.183, 0.07, 12, { y: 0.6 }, { material: '#8FE3F5', glow: 1 }),
+    // Engine: a flared skirt over the bell, which is what the fins appear to brace.
+    cylinder(0.22, 0.26, 0.1, 12, { y: 0.05 }, { material: 'frameDark' }),
+    cylinder(0.13, 0.21, 0.12, 12, { y: -0.06 }, { material: 'rubber' }),
     ...fins,
   ]);
   return rocketCache;

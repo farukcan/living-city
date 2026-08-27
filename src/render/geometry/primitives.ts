@@ -16,17 +16,23 @@ export const MATERIALS = {
   shell: '#D8D4CC',
   shellDark: '#9BA0A6',
   frame: '#6E7378',
-  frameDark: '#4A4E54',
+  frameDark: '#3F4348',
+  // The array's silver backing, which shows through the gaps between cells and so draws
+  // the grid lines for free.
+  panelFrame: '#B4B8BE',
   // Solar cells need to read as blue at a glance; anything darker turns the array into a
   // black rectangle against dark terrain.
-  panelGlass: '#3A6EAE',
-  panelCell: '#6FA6DC',
+  panelCell: '#3465AE',
   glass: '#9FD8E8',
   soil: '#4A3324',
   plant: '#5FA845',
   rubber: '#33383D',
   copper: '#B87548',
   hazard: '#D8A13C',
+  /** Excavated rock: warm and dark, so spoil never reads as terrain shading. */
+  ore: '#5A4A3E',
+  /** Weathered orange plate, worn by the parts that take the abuse. */
+  rust: '#B25E30',
 } as const;
 
 export type MaterialKey = keyof typeof MATERIALS;
@@ -116,9 +122,16 @@ export function cylinder(
   );
 }
 
-export function sphere(radius: number, at: Placement, options: PartOptions): THREE.BufferGeometry {
+/** Segment counts are explicit because a beacon and an accumulator want very different ones. */
+export function sphere(
+  radius: number,
+  widthSegments: number,
+  heightSegments: number,
+  at: Placement,
+  options: PartOptions,
+): THREE.BufferGeometry {
   return paint(
-    place(new THREE.SphereGeometry(radius, 14, 10), at),
+    place(new THREE.SphereGeometry(radius, widthSegments, heightSegments), at),
     resolve(options.material),
     options.glow ?? 0,
   );
@@ -206,7 +219,7 @@ export function solarPanel(
   at: Placement,
 ): THREE.BufferGeometry[] {
   const parts: THREE.BufferGeometry[] = [
-    box([width, 0.035, depth], {}, { material: 'panelGlass' }),
+    box([width, 0.035, depth], {}, { material: 'panelFrame' }),
   ];
 
   const gap = 0.018;

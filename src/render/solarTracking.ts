@@ -14,9 +14,10 @@ const ORBIT_TILT = 0.35;
  * sun's current horizontal position.
  *
  * The panel geometry (`buildingGeometry.ts`) is authored with a fixed downward tilt that
- * leans its front toward local -Z. Rotating the whole array by this angle around Y carries
+ * leans its front toward local -Z. Rotating the array's head by this angle around Y carries
  * that lean to point at `(cos(sweep), sin(sweep) * ORBIT_TILT)` — the same horizontal
- * direction `SunLight.tsx` places the light rig at for the same `solTime`.
+ * direction `SunLight.tsx` places the light rig at for the same `solTime`. Only the head
+ * turns; its pedestal is a separate mesh that never moves.
  */
 export function solarPanelYaw(solTime: number): number {
   const sweep = 2 * Math.PI * (solTime - 0.25);

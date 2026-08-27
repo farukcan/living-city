@@ -116,17 +116,23 @@ outline alone, before colour. Detail below that threshold — panel cells, hull 
 — exists for when the player zooms in, and costs nothing extra at distance because it is
 all one mesh.
 
-| Building      | Silhouette                                                            |
-| ------------- | --------------------------------------------------------------------- |
-| Solar Array   | Tilted cell grid on a mast — the only wide, flat, angled shape        |
-| Battery Bank  | Squat ribbed stack behind a lit status board                          |
-| Habitat       | Geodesic dome on a drum, window band, airlock tube                    |
-| Ice Extractor | Lattice drill mast over a wellhead — the tallest thing on the map     |
-| Electrolyzer  | Two banded columns, manifold, spherical accumulator                   |
-| Greenhouse    | Glazed barrel vault over planting beds — the only horizontal cylinder |
-| Mine          | Angled conveyor climbing out of a pit head                            |
-| Storage Depot | Three sealed drums on a pallet with a labelled crate                  |
-| Landing Pad   | A painted apron with corner lights — the only flat, ground-level shape |
+| Building      | Silhouette                                                             |
+| ------------- | ---------------------------------------------------------------------- |
+| Solar Array   | Tilted cell grid on a braced mast — the only wide, flat, angled shape  |
+| Battery Bank  | Corner-posted enclosure on a plinth, behind a lit status board         |
+| Habitat       | Geodesic dome on a drum: window band, round airlock, comms mast        |
+| Ice Extractor | Lattice drill mast over a wellhead — the tallest thing on the map      |
+| Electrolyzer  | Two banded columns under a sphere on copper elbows                     |
+| Greenhouse    | Glazed barrel vault between two end modules — the only horizontal drum |
+| Mine          | Trussed conveyor climbing from a spoil-ringed pit to a chute           |
+| Storage Depot | Three banded tanks on a pallet beside a control cabinet                |
+| Landing Pad   | A lit apron on a hex deck — the only flat, ground-level shape          |
+
+**The solar array is authored in two halves.** `solarArrayBase` is the pedestal, mast and
+braces; `solarArrayHead` is everything above the pivot — motor, rail, cells, spine — built
+around the mast axis so a yaw about Y turns it in place. Only the head tracks the sun, and a
+pedestal that swung with the panel read as a bug. `buildingGeometry('solarArray')` still
+returns the two merged, which is what the placement ghost and the reference renders want.
 
 **Scale has a hard ceiling.** A flat-top hex is √3 ≈ 1.73 units across and the widest
 building is 1.32 units, so the instance scale cannot exceed ~1.2 without neighbouring
@@ -138,6 +144,28 @@ a Mars habitat. The solar array's cells are individual quads on a frame, so they
 zoom without a texture — and the panel tilt is deliberately shallower than a real array
 would use, because a steeper one presents its unlit edge to a raised camera and renders as
 a black slab.
+
+**The concept art in `docs/concept_art` sets the detail level.** What separates a machine
+from a primitive there is a small, repeatable vocabulary — stepped footings, overhanging
+roof caps, corner posts, banded tanks, capped vent stacks — and each of those costs a
+handful of triangles rather than a texture. Segment counts stay low on purpose: the
+faceting is the style. A building sits at roughly 300–700 triangles, so a 200-building
+colony stays comfortably inside the triangle budget below.
+
+Two of the concepts cannot be reproduced literally, and are approximated instead:
+
+- **The greenhouse's glass is opaque geometry**, so its interior can only be shown from
+  outside. Lit grow-light strips run along the glazing bays where the concept shows purple
+  light coming through the vault.
+- **The mine's pit is not a bored hole** — that would need a CSG operation on the tile. It
+  is a dark disc recessed below the deck, ringed by a spoil berm, which reads as a pit at
+  any zoom the game actually uses.
+
+**Reference renders.** `npm run render:buildings` drives `BuildingStudio` through Playwright
+and writes one PNG per type to `docs/buildings`, which is how a geometry change is checked
+against the concept art. The studio holds the glow mask at a dusk value rather than full
+night: at full night every window and status board blows out to flat white and the render
+stops being a useful reference.
 
 **Merging requires identical attribute sets.** The hand-built geodesic shell has no UVs, so
 `assemble` strips UVs from every part before merging. Nothing here is textured; this is both
@@ -155,7 +183,8 @@ highlights that read as stylized rather than unfinished, and it costs nothing.
 | Ice sheet                     | `#C6D8E2` (roughness 0.12) |
 | Ore                           | `#4C4038` (roughness 0.85) |
 | Building shell                | `#D8D4CC`                  |
-| Solar cell                    | `#6FA6DC`                  |
+| Solar cell / panel frame      | `#3465AE` / `#B4B8BE`      |
+| Spoil and worn plate          | `#5A4A3E` / `#B25E30`      |
 | Pipework                      | `#8A9096`                  |
 | Accent (active)               | `#4FC3F7`                  |
 | Warning (throttled)           | `#FFB74D`                  |
@@ -251,11 +280,11 @@ the code comment must say so, so nobody later mistakes them for a graph solver.
 Exactly three things in the scene move every frame, and they are the stated exception to
 "matrices are recomputed only on a structural change":
 
-| Object                            | File            | What moves                            |
-| ---------------------------------- | --------------- | -------------------------------------- |
-| `FlowPackets`                       | `Pipelines.tsx` | packets sliding along cable curves     |
-| `Rocket`                            | `Rocket.tsx`    | one rocket descending and lifting off  |
-| Solar arrays (`BuildingCluster`)    | `Buildings.tsx` | panel yaw tracking the sun's direction |
+| Object                                | File            | What moves                             |
+| ------------------------------------- | --------------- | -------------------------------------- |
+| `FlowPackets`                         | `Pipelines.tsx` | packets sliding along cable curves     |
+| `Rocket`                              | `Rocket.tsx`    | one rocket descending and lifting off  |
+| Solar array heads (`BuildingCluster`) | `Buildings.tsx` | panel yaw tracking the sun's direction |
 
 All three follow the same three rules, and anything added here must too:
 
@@ -312,11 +341,16 @@ existing `aGlow` path.
 
 ### Solar arrays
 
-Every solar array yaws in place to face wherever `SunLight.tsx` currently renders the sun,
-using the same `sweep = 2π(solTime − 0.25)` angle as the light rig. Only yaw moves: the
-panel's own tilt in `buildingGeometry.ts` is deliberately shallow so it doesn't present its
-unlit edge to the camera, and steepening it to track elevation as well would reintroduce
-exactly that problem at low sun angles.
+Every solar array's **head** yaws in place to face wherever `SunLight.tsx` currently renders
+the sun, using the same `sweep = 2π(solTime − 0.25)` angle as the light rig. The pedestal it
+stands on is a second instanced mesh that keeps the matrices written on the last structural
+change, so the ground half never turns. Only yaw moves: the panel's own tilt in
+`buildingGeometry.ts` is deliberately shallow so it doesn't present its unlit edge to the
+camera, and steepening it to track elevation as well would reintroduce exactly that problem
+at low sun angles.
+
+Both meshes carry the same click and hover handlers, and their instance indices line up, so
+clicking a panel selects the array it belongs to.
 
 The yaw math lives in `render/solarTracking.ts` rather than in `Buildings.tsx`, the same
 split as `rocketPhase.ts`, so it is tested (`solarTracking.test.ts`) without a renderer.
