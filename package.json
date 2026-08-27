@@ -14,7 +14,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"docs/**/*.md\" \"*.md\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "render:buildings": "playwright test e2e/generate-buildings.spec.ts"
   },
   "type": "module",
   "dependencies": {

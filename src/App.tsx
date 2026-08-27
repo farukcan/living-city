@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Scene } from './render/Scene.tsx';
+import { BuildingStudio, type StudioBuildingKind } from './render/BuildingStudio.tsx';
 import { startLoop } from './state/loop.ts';
 import { useStore } from './state/store.ts';
 import { CriticalWarnings, OutageAlert } from './ui/Alerts.tsx';
@@ -15,12 +16,18 @@ import { Sparkline } from './ui/Sparkline.tsx';
 import { TopBar } from './ui/TopBar.tsx';
 
 export function App() {
+  const params = new URLSearchParams(window.location.search);
+  const studioBuilding = params.get('building') as StudioBuildingKind | null;
+
   // One rAF chain for the lifetime of the app; the loop owns simulation cadence.
-  useEffect(() => startLoop(), []);
+  useEffect(() => {
+    if (!studioBuilding) return startLoop();
+  }, [studioBuilding]);
 
   // Escape is the universal "stop what I'm doing": it clears placement, then selection.
   // F3 toggles the frame profiler, following the convention players already know.
   useEffect(() => {
+    if (studioBuilding) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'F3') {
         // Firefox binds F3 to find-again, which would steal focus from the canvas.
@@ -35,7 +42,11 @@ export function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [studioBuilding]);
+
+  if (studioBuilding) {
+    return <BuildingStudio kind={studioBuilding} />;
+  }
 
   return (
     <div className="relative h-dvh w-dvw overflow-hidden bg-[#1A1626]">
