@@ -117,12 +117,7 @@ export type BuildingDefinition = {
  * `crewArrival` is a notice, not a random event: it fires off the landing schedule and must
  * never appear in EVENT_WEIGHTS (docs/SPEC-06-events.md).
  */
-export type EventKind =
-  | 'dustStorm'
-  | 'meteorStrike'
-  | 'oxygenLeak'
-  | 'supplyDrop'
-  | 'crewArrival';
+export type EventKind = 'dustStorm' | 'meteorStrike' | 'oxygenLeak' | 'supplyDrop' | 'crewArrival';
 
 /** Only durational events are stored; instant ones mutate the colony and vanish. */
 export type ActiveEvent = {

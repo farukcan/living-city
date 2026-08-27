@@ -92,7 +92,7 @@ before allocation (a dust storm must apply to this tick's sunlight), deaths befo
 down).
 
 The clock is advanced up front because the landing schedule is derived from `sol` and needs
-to know which boundary this tick crosses. Events still receive the *old* sol, so their grace
+to know which boundary this tick crosses. Events still receive the _old_ sol, so their grace
 period and notice numbering are unaffected.
 
 ## The Allocator
@@ -280,10 +280,10 @@ same `gameOver` field as the two losses because everything downstream (the loop 
 persistence, the restart button) only ever needs to know whether the colony is still
 running:
 
-| Cause         | Trigger                                                                    |
-| ------------- | --------------------------------------------------------------------------- |
-| `oxygen`      | the oxygen stock reaches zero                                              |
-| `depopulated` | fewer than one colonist is left                                            |
+| Cause         | Trigger                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `oxygen`      | the oxygen stock reaches zero                                                                         |
+| `depopulated` | fewer than one colonist is left                                                                       |
 | `victory`     | sol ≥ `WIN_SOLS` **and** habitats ≥ `WIN_HABITATS` **and** population ≥ `WIN_POPULATION`, all at once |
 
 Once `gameOver` is set, `simulateTick` returns its input unchanged — the same object, not a
@@ -332,7 +332,7 @@ advanced on every draw. No `Math.random()` anywhere in `src/sim/`. Consequences:
 | Survival monotonicity   | Adding a producer never lowers the score for its resource              |
 | Binary production       | Every run flag is exactly 0 or 1 over 2000 ticks; a shed tier is 0     |
 | Grid outage             | Empty battery plus short solar stops every producer, tier order aside  |
-| Overflow                | Capacity 10 with 14 colonists consumes as 18                          |
+| Overflow                | Capacity 10 with 14 colonists consumes as 18                           |
 | Deprivation start       | The clock starts below one sol of need, not at an empty tank           |
 | Slow recovery           | Two sols of relief undo half a sol of a two-sol debt                   |
 | Death acceleration      | The second sol past a deadline costs more than the first               |

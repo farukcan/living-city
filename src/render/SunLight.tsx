@@ -55,8 +55,7 @@ const SHADOW_CAMERA_EXTENT = 30;
  * of 1x travel (~0.21) is the hold: one visible step, then stable, at the
  * same simulated rate on 60 Hz or 144 Hz.
  */
-const SHADOW_MOVE =
-  ((ORBIT_RADIUS * 2 * Math.PI) / (SECONDS_PER_SOL * 120)) * 7;
+const SHADOW_MOVE = ((ORBIT_RADIUS * 2 * Math.PI) / (SECONDS_PER_SOL * 120)) * 7;
 const SHADOW_MOVE_SQ = SHADOW_MOVE * SHADOW_MOVE;
 
 export function SunLight() {
@@ -94,7 +93,8 @@ export function SunLight() {
       // (and its matrix) hold. They stay in lockstep because Three skips both when
       // `needsUpdate` is false. Building-list identity also dirties the map so a
       // placement while paused still casts a shadow.
-      const sunMoved = light.position.distanceToSquared(lastShadowPosition.current) >= SHADOW_MOVE_SQ;
+      const sunMoved =
+        light.position.distanceToSquared(lastShadowPosition.current) >= SHADOW_MOVE_SQ;
       const buildingsMoved = sim.buildings !== lastBuildings.current;
       if (sunMoved || buildingsMoved) {
         if (sunMoved) lastShadowPosition.current.copy(light.position);

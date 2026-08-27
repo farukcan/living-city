@@ -9,13 +9,7 @@ import { GRACE_SOLS } from '../sim/constants.ts';
 import { effectivePopulation, isDeprived } from '../sim/population.ts';
 import { computeCaps, countKind } from '../sim/resources.ts';
 import { nextLandingCrew, solsUntilLanding } from '../sim/rocket.ts';
-import type {
-  ActiveEvent,
-  GameOver,
-  HistorySample,
-  ResourceKind,
-  SimState,
-} from '../sim/types.ts';
+import type { ActiveEvent, GameOver, HistorySample, ResourceKind, SimState } from '../sim/types.ts';
 import { RESOURCE_KINDS } from '../sim/types.ts';
 
 /** Sols of oxygen left below which the warning stops being advisory. */

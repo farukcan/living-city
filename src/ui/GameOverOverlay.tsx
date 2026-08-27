@@ -19,7 +19,8 @@ const CAUSE_HEADLINE: Readonly<Record<GameOver['cause'], string>> = {
 };
 
 const CAUSE_DETAIL: Readonly<Record<GameOver['cause'], string>> = {
-  oxygen: 'The last of the oxygen was breathed. Suffocation is immediate; there is no rationing it.',
+  oxygen:
+    'The last of the oxygen was breathed. Suffocation is immediate; there is no rationing it.',
   depopulated: 'The colony went without for too long, and the last colonist died with it.',
   victory: `${WIN_SOLS} sols survived, ${WIN_HABITATS} habitats standing, ${WIN_POPULATION} colonists fed. Mars is inhabited now.`,
 };

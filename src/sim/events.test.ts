@@ -139,33 +139,25 @@ describe('event scheduling', () => {
     expect(a).not.toEqual(b);
   });
 
-  it(
-    'averages roughly one event per MEAN_EVENT_INTERVAL_SOLS',
-    () => {
-      // Averaged over several seeds: a single 200-sol run is too small a sample to pin down.
-      let total = 0;
-      const seeds = [1, 2, 3, 4, 5];
-      const sols = 200;
-      for (const seed of seeds) total += collectEvents(seed, sols).length;
+  it('averages roughly one event per MEAN_EVENT_INTERVAL_SOLS', () => {
+    // Averaged over several seeds: a single 200-sol run is too small a sample to pin down.
+    let total = 0;
+    const seeds = [1, 2, 3, 4, 5];
+    const sols = 200;
+    for (const seed of seeds) total += collectEvents(seed, sols).length;
 
-      const observed = (seeds.length * (sols - GRACE_PERIOD_SOLS)) / total;
-      expect(observed).toBeGreaterThan(MEAN_EVENT_INTERVAL_SOLS * 0.6);
-      expect(observed).toBeLessThan(MEAN_EVENT_INTERVAL_SOLS * 1.6);
-    },
-    15000,
-  );
+    const observed = (seeds.length * (sols - GRACE_PERIOD_SOLS)) / total;
+    expect(observed).toBeGreaterThan(MEAN_EVENT_INTERVAL_SOLS * 0.6);
+    expect(observed).toBeLessThan(MEAN_EVENT_INTERVAL_SOLS * 1.6);
+  }, 15000);
 
-  it(
-    'eventually fires every kind of event',
-    () => {
-      const kinds = new Set<EventKind>();
-      for (const seed of [1, 2, 3, 4, 5, 6]) {
-        for (const event of collectEvents(seed, 200)) kinds.add(event.kind);
-      }
-      expect([...kinds].sort()).toEqual(['dustStorm', 'meteorStrike', 'oxygenLeak', 'supplyDrop']);
-    },
-    15000,
-  );
+  it('eventually fires every kind of event', () => {
+    const kinds = new Set<EventKind>();
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      for (const event of collectEvents(seed, 200)) kinds.add(event.kind);
+    }
+    expect([...kinds].sort()).toEqual(['dustStorm', 'meteorStrike', 'oxygenLeak', 'supplyDrop']);
+  }, 15000);
 });
 
 describe('events inside the simulation', () => {

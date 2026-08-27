@@ -231,7 +231,13 @@ function PipeRuns({ links }: { links: readonly Link[] }) {
     if (links.length === 0) return null;
     const tubes = links.map((link) => {
       const tubularSegments = Math.max(8, (link.points.length - 1) * 6);
-      return new THREE.TubeGeometry(link.curve, tubularSegments, PIPE_RADIUS, TUBE_RADIAL_SEGMENTS, false);
+      return new THREE.TubeGeometry(
+        link.curve,
+        tubularSegments,
+        PIPE_RADIUS,
+        TUBE_RADIAL_SEGMENTS,
+        false,
+      );
     });
     const merged = mergeGeometries(tubes, false);
     tubes.forEach((tube) => tube.dispose());

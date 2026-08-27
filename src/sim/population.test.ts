@@ -166,7 +166,10 @@ describe('death', () => {
   });
 
   it('never drives the population below zero', () => {
-    let result = { population: POPULATION, deprivation: { water: 0, food: 0 } as DeprivationTimers };
+    let result = {
+      population: POPULATION,
+      deprivation: { water: 0, food: 0 } as DeprivationTimers,
+    };
     const stocks = stocksWith({ water: 0, food: 0 });
     for (let i = 0; i < 5000; i++) {
       result = step({

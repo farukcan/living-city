@@ -15,15 +15,15 @@ the mine and then the greenhouse to keep life support running until sunrise:
 
 ## Tech Stack
 
-| Layer         | Tech                                              |
-| ------------- | -------------------------------------------------- |
-| Language      | TypeScript                                        |
-| Rendering     | React 19, React Three Fiber, Three.js, postprocessing |
-| Styling       | Tailwind CSS                                      |
-| State         | Zustand                                           |
-| Build         | Vite                                               |
-| Testing       | Vitest (unit), Playwright (e2e)                   |
-| Lint/Format   | ESLint, Prettier                                  |
+| Layer       | Tech                                                  |
+| ----------- | ----------------------------------------------------- |
+| Language    | TypeScript                                            |
+| Rendering   | React 19, React Three Fiber, Three.js, postprocessing |
+| Styling     | Tailwind CSS                                          |
+| State       | Zustand                                               |
+| Build       | Vite                                                  |
+| Testing     | Vitest (unit), Playwright (e2e)                       |
+| Lint/Format | ESLint, Prettier                                      |
 
 ## Quick Start
 

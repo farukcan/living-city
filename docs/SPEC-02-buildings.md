@@ -138,10 +138,10 @@ then the greenhouse, which is the lesson the demo exists to teach.
 
 ## Crew Deliveries
 
-| Constant                | Value | Note                                     |
-| ----------------------- | ----- | ---------------------------------------- |
-| `LANDING_INTERVAL_SOLS` | 7     | first landing on sol 7                   |
-| `CREW_PER_LANDING_STEP` | 5     | crew on landing *n* is `5n`: 5, 10, 15, … |
+| Constant                | Value | Note                                      |
+| ----------------------- | ----- | ----------------------------------------- |
+| `LANDING_INTERVAL_SOLS` | 7     | first landing on sol 7                    |
+| `CREW_PER_LANDING_STEP` | 5     | crew on landing _n_ is `5n`: 5, 10, 15, … |
 
 Landings are mandatory and unbounded. Cumulative crew is `5·n(n+1)/2`, so the colony reaches
 11 by sol 7, 21 by sol 14, 36 by sol 21. Against a Habitat capacity of 10 that means the
@@ -154,15 +154,15 @@ it. It is the first dial to reach for if the difficulty needs adjusting, ahead o
 
 ## Deprivation and Death
 
-| Constant                     | Value      | Note                                          |
-| ---------------------------- | ---------- | --------------------------------------------- |
-| `GRACE_SOLS.water`           | 3          | sols without water before deaths begin        |
-| `GRACE_SOLS.food`            | 7          | sols without food before deaths begin         |
-| `DEPRIVATION_RECOVERY_RATE`  | 0.25       | relief unwinds the clock at a quarter rate    |
-| `DEATH_RAMP_SOLS`            | 5          | sols past the deadline where the rate caps    |
-| `DEATH_ACCELERATION`         | 3          | added to the rate multiplier per sol overrun  |
-| `DEATH_RATE_PER_SOL`         | 0.02       | rate at the moment a grace period expires     |
-| `MIN_VIABLE_POPULATION`      | 0          | floor; below one colonist the colony ends     |
+| Constant                    | Value | Note                                         |
+| --------------------------- | ----- | -------------------------------------------- |
+| `GRACE_SOLS.water`          | 3     | sols without water before deaths begin       |
+| `GRACE_SOLS.food`           | 7     | sols without food before deaths begin        |
+| `DEPRIVATION_RECOVERY_RATE` | 0.25  | relief unwinds the clock at a quarter rate   |
+| `DEATH_RAMP_SOLS`           | 5     | sols past the deadline where the rate caps   |
+| `DEATH_ACCELERATION`        | 3     | added to the rate multiplier per sol overrun |
+| `DEATH_RATE_PER_SOL`        | 0.02  | rate at the moment a grace period expires    |
+| `MIN_VIABLE_POPULATION`     | 0     | floor; below one colonist the colony ends    |
 
 Oxygen appears nowhere here on purpose: it has no grace period at all. Reaching zero is an
 immediate loss. Relief stops deaths immediately; the leftover clock is debt against the
@@ -170,11 +170,11 @@ next drought (see [SPEC-01](./SPEC-01-simulation.md)).
 
 ## Win Condition
 
-| Constant        | Value | Note                                          |
-| ---------------- | ----- | ---------------------------------------------- |
-| `WIN_SOLS`       | 60    | sols survived                                  |
-| `WIN_HABITATS`   | 15    | Habitats standing, any status counts           |
-| `WIN_POPULATION` | 150   | colonists alive                                |
+| Constant         | Value | Note                                 |
+| ---------------- | ----- | ------------------------------------ |
+| `WIN_SOLS`       | 60    | sols survived                        |
+| `WIN_HABITATS`   | 15    | Habitats standing, any status counts |
+| `WIN_POPULATION` | 150   | colonists alive                      |
 
 All three must hold on the same tick — see [SPEC-01](./SPEC-01-simulation.md)'s Game Over
 section for how `victory` is checked against the two losses.
@@ -196,11 +196,11 @@ Failures surface as a red ghost plus a reason string in the HUD — never a sile
 
 ## Building States
 
-| State     | Produces           | Consumes  | Appearance                           |
-| --------- | ------------------ | --------- | ------------------------------------ |
-| `active`  | at full rate or 0  | yes       | full colour, emissive at night       |
-| `idle`    | no                 | no        | desaturated, no emissive             |
-| `damaged` | no                 | heat only | dark, tilted, sparking accent colour |
+| State     | Produces          | Consumes  | Appearance                           |
+| --------- | ----------------- | --------- | ------------------------------------ |
+| `active`  | at full rate or 0 | yes       | full colour, emissive at night       |
+| `idle`    | no                | no        | desaturated, no emissive             |
+| `damaged` | no                | heat only | dark, tilted, sparking accent colour |
 
 An `active` building still produces nothing unless it was served its full power and water
 request — production is all-or-nothing, so the HUD reports Running or Stopped rather than a

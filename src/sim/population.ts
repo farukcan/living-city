@@ -66,11 +66,7 @@ function timerCeiling(resource: GraceResource): number {
 }
 
 /** True when stock is below a single sol of need — the clock starts here, not at zero. */
-export function isDeprived(
-  stock: number,
-  effectivePop: number,
-  resource: GraceResource,
-): boolean {
+export function isDeprived(stock: number, effectivePop: number, resource: GraceResource): boolean {
   return stock < effectivePop * PER_CAPITA_CONSUMPTION[resource];
 }
 

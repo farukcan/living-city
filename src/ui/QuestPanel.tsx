@@ -18,15 +18,7 @@ const WIN_QUEST_LABEL: Readonly<Record<WinQuestId, string>> = {
   population: `Reach ${WIN_POPULATION} colonists`,
 };
 
-function WinQuestRow({
-  id,
-  current,
-  target,
-}: {
-  id: WinQuestId;
-  current: number;
-  target: number;
-}) {
+function WinQuestRow({ id, current, target }: { id: WinQuestId; current: number; target: number }) {
   const complete = current >= target;
   return (
     <div className="flex items-center justify-between gap-2 py-0.5">

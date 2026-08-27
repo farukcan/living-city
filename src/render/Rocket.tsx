@@ -7,7 +7,12 @@ import type { Building, TerrainField } from '../sim/types.ts';
 import { renderSolTime } from '../state/loop.ts';
 import { useStore } from '../state/store.ts';
 import { createBuildingMaterial, setNightFactor } from './buildingMaterial.ts';
-import { NOZZLE_Y, plumeGeometry, ROCKET_SCALE, rocketGeometry } from './geometry/rocketGeometry.ts';
+import {
+  NOZZLE_Y,
+  plumeGeometry,
+  ROCKET_SCALE,
+  rocketGeometry,
+} from './geometry/rocketGeometry.ts';
 import { DESCENT_START, rocketCycle, rocketPhase } from './rocketPhase.ts';
 import { tileHeight } from './Terrain.tsx';
 

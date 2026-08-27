@@ -109,9 +109,7 @@ export function EventToast() {
     <div className="pointer-events-none absolute left-1/2 top-24 -translate-x-1/2">
       <div
         className={`flex items-center gap-2.5 rounded-md border px-3 py-2 backdrop-blur-sm ${
-          hostile
-            ? 'border-[#EF5350]/45 bg-[#EF5350]/15'
-            : 'border-[#4FC3F7]/40 bg-[#4FC3F7]/12'
+          hostile ? 'border-[#EF5350]/45 bg-[#EF5350]/15' : 'border-[#4FC3F7]/40 bg-[#4FC3F7]/12'
         }`}
       >
         <presentation.Icon className="h-5 w-5 shrink-0" />
