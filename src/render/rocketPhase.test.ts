@@ -7,6 +7,7 @@ import {
   ENTRY_ALTITUDE,
   REST_SOLS,
   rocketCycle,
+  rocketParked,
   rocketPhase,
 } from './rocketPhase.ts';
 
@@ -105,5 +106,16 @@ describe('rocketCycle', () => {
         expect(rocketPhase(rocketCycle(sol, solTime)).visible).toBe(false);
       }
     }
+  });
+
+  it('reports the rocket parked only while it stands on the pad', () => {
+    expect(rocketParked(0)).toBe(true);
+    expect(rocketParked(REST_SOLS - 0.01)).toBe(true);
+    // Climbing away, still visible but no longer on the pad.
+    expect(rocketParked(REST_SOLS + 0.01)).toBe(false);
+    // The empty-pad gap between lift-off and the next descent.
+    expect(rocketParked(REST_SOLS + ASCENT_SOLS + 0.01)).toBe(false);
+    // Descending: over the pad, not on it.
+    expect(rocketParked(DESCENT_START + DESCENT_SOLS / 2)).toBe(false);
   });
 });

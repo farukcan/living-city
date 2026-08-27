@@ -1,8 +1,10 @@
+import { rocketCycle, rocketParked } from '../render/rocketPhase.ts';
 import { definitionOf } from '../sim/constants.ts';
 import { repairCost } from '../sim/placement.ts';
 import type { Building, ResourceKind } from '../sim/types.ts';
 import { demolishBuilding, repairBuilding, toggleIdle } from '../state/actions.ts';
 import { useStore } from '../state/store.ts';
+import { CONCEPT_ART, CREW_ROCKET_ART } from './conceptArt.ts';
 import { formatAmount } from './format.ts';
 
 /**
@@ -83,6 +85,11 @@ export function InspectorPanel() {
   const outage = useStore((state) => state.sim.report.power.outage);
   const dryColony = useStore((state) => state.sim.stocks.water <= 0);
   const minerals = useStore((state) => Math.floor(state.sim.stocks.minerals));
+  // Another boolean for the same reason: the pad's art depends on the rocket, and selecting
+  // the raw clock would re-render this panel ten times a second.
+  const rocketOnPad = useStore((state) =>
+    rocketParked(rocketCycle(state.sim.sol, state.sim.solTime)),
+  );
   const selectBuilding = useStore((state) => state.selectBuilding);
 
   if (!building || selectedId === null) return null;
@@ -92,9 +99,27 @@ export function InspectorPanel() {
   const stopped = building.status === 'active' && !running;
   const repair = repairCost(building.kind);
   const thirsty = dryColony && (definition.consumes.water ?? 0) > 0;
+  // A pad with a rocket standing on it is a different sight from an empty one, and the
+  // player is most likely to open this panel precisely because a rocket just landed.
+  const occupiedPad = building.kind === 'rocketPad' && rocketOnPad;
+  const art = occupiedPad ? CREW_ROCKET_ART : CONCEPT_ART[building.kind];
 
+  // Uncropped art makes this panel tall enough to overrun a short viewport, where the
+  // controls at the foot are the part that would be lost. Scroll instead of clipping.
   return (
-    <div className="pointer-events-auto w-64 rounded-md border border-white/10 bg-black/45 p-3 backdrop-blur-sm">
+    <div className="pointer-events-auto max-h-[calc(100dvh-11rem)] w-64 overflow-y-auto rounded-md border border-white/10 bg-black/45 p-3 backdrop-blur-sm">
+      {/* Full-bleed: negative margins undo the panel padding so the art meets the border. */}
+      <div className="-mx-3 -mt-3 mb-2.5">
+        <img
+          src={art}
+          alt={`${occupiedPad ? 'Crew Rocket' : definition.label} concept art`}
+          // Shown at its native square aspect: any crop tight enough to save vertical space
+          // cuts the building itself, which is the one thing the art is here to show.
+          className="aspect-square w-full object-contain"
+        />
+        <div className="h-6 -mt-6 bg-gradient-to-b from-transparent to-black/60" />
+      </div>
+
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="text-sm text-white/90">{definition.label}</div>
@@ -169,33 +194,33 @@ export function InspectorPanel() {
 
       {/* A fixture the colony was issued offers no controls: every action would be refused. */}
       {definition.buildable && (
-      <div className="mt-2.5 flex gap-1.5 border-t border-white/10 pt-2.5">
-        {building.status === 'damaged' ? (
+        <div className="mt-2.5 flex gap-1.5 border-t border-white/10 pt-2.5">
+          {building.status === 'damaged' ? (
+            <button
+              type="button"
+              onClick={() => repairBuilding(building.id)}
+              disabled={minerals < repair}
+              className="flex-1 rounded border border-[#4FC3F7]/40 bg-[#4FC3F7]/15 px-2 py-1.5 text-[11px] text-[#BEE7FA] hover:bg-[#4FC3F7]/25 disabled:opacity-40"
+            >
+              Repair ({repair})
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => toggleIdle(building.id)}
+              className="flex-1 rounded border border-white/15 bg-white/5 px-2 py-1.5 text-[11px] text-white/75 hover:bg-white/10"
+            >
+              {building.status === 'active' ? 'Idle' : 'Resume'}
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => repairBuilding(building.id)}
-            disabled={minerals < repair}
-            className="flex-1 rounded border border-[#4FC3F7]/40 bg-[#4FC3F7]/15 px-2 py-1.5 text-[11px] text-[#BEE7FA] hover:bg-[#4FC3F7]/25 disabled:opacity-40"
+            onClick={() => demolishBuilding(building.id)}
+            className="flex-1 rounded border border-[#EF5350]/35 bg-[#EF5350]/10 px-2 py-1.5 text-[11px] text-[#FFC9C7] hover:bg-[#EF5350]/20"
           >
-            Repair ({repair})
+            Demolish (+{Math.floor(definition.cost * 0.5)})
           </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => toggleIdle(building.id)}
-            className="flex-1 rounded border border-white/15 bg-white/5 px-2 py-1.5 text-[11px] text-white/75 hover:bg-white/10"
-          >
-            {building.status === 'active' ? 'Idle' : 'Resume'}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => demolishBuilding(building.id)}
-          className="flex-1 rounded border border-[#EF5350]/35 bg-[#EF5350]/10 px-2 py-1.5 text-[11px] text-[#FFC9C7] hover:bg-[#EF5350]/20"
-        >
-          Demolish (+{Math.floor(definition.cost * 0.5)})
-        </button>
-      </div>
+        </div>
       )}
     </div>
   );

@@ -77,3 +77,15 @@ export function rocketPhase(cycle: number): RocketPhase {
     thrust: 0.4 + 0.6 * t,
   };
 }
+
+/**
+ * Whether a rocket is standing on the pad, as opposed to in the sky or absent.
+ *
+ * Derived from `rocketPhase` rather than compared against `REST_SOLS` directly, so the two
+ * can never disagree about where the rocket is. The inspector asks this to decide which
+ * concept art the Landing Pad gets.
+ */
+export function rocketParked(cycle: number): boolean {
+  const phase = rocketPhase(cycle);
+  return phase.visible && phase.altitude === 0;
+}
