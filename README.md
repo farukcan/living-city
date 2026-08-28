@@ -1,3 +1,5 @@
+![Living Mars Machine](./media/logo-wordmark.png)
+
 # Living Mars Machine — Mars Colony Simulator
 
 A browser Mars colony that runs itself: place buildings on procedurally generated hex
@@ -45,6 +47,7 @@ npm run dev          # http://localhost:5173
 | `npm test`                                          | Vitest — simulation core                             |
 | `npm run test:e2e`                                  | Playwright — renders and interacts with the real app |
 | `npm run format`                                    | Prettier over source and docs                        |
+| `npm run render:logo`                               | Regenerate the procedural logo in `media/`           |
 
 ## Measured Cost
 

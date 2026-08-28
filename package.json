@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "render:buildings": "playwright test e2e/generate-buildings.spec.ts"
+    "render:buildings": "playwright test e2e/generate-buildings.spec.ts",
+    "render:logo": "node media/generate-logo.mjs"
   },
   "type": "module",
   "dependencies": {

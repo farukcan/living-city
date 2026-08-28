@@ -16,6 +16,11 @@ export default tseslint.config(
     },
   },
   {
+    // The logo generator is a Node script, not browser code.
+    files: ['media/**/*.mjs'],
+    languageOptions: { globals: { process: 'readonly', console: 'readonly' } },
+  },
+  {
     // The simulation must stay portable: no three, no react, no browser globals.
     // This rule is the enforcement of the architectural boundary in PRD.md.
     files: ['src/sim/**/*.ts'],
