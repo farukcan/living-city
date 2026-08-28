@@ -5,7 +5,7 @@
 
 import { allocateByPriority, isFullyServed } from './allocate.ts';
 import type { Demand } from './allocate.ts';
-import { BASE_CAPS, definitionOf, PER_CAPITA_CONSUMPTION } from './constants.ts';
+import { BASE_CAPS, BUILDING_KINDS, definitionOf, PER_CAPITA_CONSUMPTION } from './constants.ts';
 import type { Building, BuildingKind, ResourceKind, ResourceReport } from './types.ts';
 import { RESOURCE_KINDS } from './types.ts';
 
@@ -15,6 +15,22 @@ const POPULATION_TIER = 1;
 
 export function countKind(buildings: readonly Building[], kind: BuildingKind): number {
   return buildings.reduce((total, building) => (building.kind === kind ? total + 1 : total), 0);
+}
+
+/**
+ * Every kind's standing count in one pass.
+ *
+ * Callers that need more than one figure would otherwise walk the building list once per
+ * kind; the HUD snapshot wants all nine at 4 Hz, which is nine walks a snapshot for an
+ * answer a single reduce already has.
+ */
+export function countByKind(
+  buildings: readonly Building[],
+): Readonly<Record<BuildingKind, number>> {
+  const counts = {} as Record<BuildingKind, number>;
+  for (const kind of BUILDING_KINDS) counts[kind] = 0;
+  for (const building of buildings) counts[building.kind] += 1;
+  return counts;
 }
 
 /**

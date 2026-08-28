@@ -13,7 +13,17 @@ import { useStore } from '../state/store.ts';
 
 const STORAGE_KEY = 'living-machine.onboarding.seen';
 
+/**
+ * Backs the stored flag for the rest of the session.
+ *
+ * Without it a blocked localStorage makes this card and the tutorial watcher disagree: the
+ * card hides on its own state while the watcher keeps reading "still up" out of storage and
+ * stays silent for the whole run.
+ */
+let dismissedThisSession = false;
+
 function alreadySeen(): boolean {
+  if (dismissedThisSession) return true;
   try {
     return localStorage.getItem(STORAGE_KEY) === '1';
   } catch {
@@ -22,11 +32,25 @@ function alreadySeen(): boolean {
 }
 
 function remember(): void {
+  dismissedThisSession = true;
   try {
     localStorage.setItem(STORAGE_KEY, '1');
   } catch {
     // A blocked storage is not worth interrupting anyone over.
   }
+}
+
+/**
+ * Whether the card is still up, answered without rendering it.
+ *
+ * The tutorial watcher has to stay quiet while this card owns the left column, and it runs
+ * outside React. `remember()` writes localStorage before the local `dismissed` state flips,
+ * so storage is the source of truth here and the two answers cannot disagree.
+ */
+export function onboardingVisible(): boolean {
+  const { interaction } = useStore.getState();
+  const interacted = interaction.buildMode !== null || interaction.selectedBuildingId !== null;
+  return !alreadySeen() && !interacted;
 }
 
 export function Onboarding() {

@@ -15,15 +15,24 @@ import { QuestPanel } from './ui/QuestPanel.tsx';
 import { Sparkline } from './ui/Sparkline.tsx';
 import { StatusPanel } from './ui/StatusPanel.tsx';
 import { TopBar } from './ui/TopBar.tsx';
+import { TutorialCard } from './ui/tutorial/TutorialCard.tsx';
+import { startTutorialWatcher } from './ui/tutorial/watcher.ts';
 import { COLUMN_WIDTH } from './ui/panel.ts';
 
 export function App() {
   const params = new URLSearchParams(window.location.search);
   const studioBuilding = params.get('building') as StudioBuildingKind | null;
 
-  // One rAF chain for the lifetime of the app; the loop owns simulation cadence.
+  // One rAF chain for the lifetime of the app; the loop owns simulation cadence. The
+  // tutorial watcher rides the snapshots that loop publishes, so the two share a lifetime.
   useEffect(() => {
-    if (!studioBuilding) return startLoop();
+    if (studioBuilding) return;
+    const stopLoop = startLoop();
+    const stopWatcher = startTutorialWatcher();
+    return () => {
+      stopWatcher();
+      stopLoop();
+    };
   }, [studioBuilding]);
 
   // Escape is the universal "stop what I'm doing": it clears placement, then selection.
@@ -74,6 +83,7 @@ export function App() {
           <div className={`flex min-h-0 shrink-0 flex-col gap-2 ${COLUMN_WIDTH}`}>
             <InspectorPanel />
             <Onboarding />
+            <TutorialCard />
             <div className="mt-auto">
               <ProfilerPanel />
             </div>

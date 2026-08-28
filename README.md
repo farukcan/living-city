@@ -106,6 +106,7 @@ package anywhere in it.
 | [docs/SPEC-04-rendering.md](./docs/SPEC-04-rendering.md)   | Geometry, instancing, day/night, palette   |
 | [docs/SPEC-05-state.md](./docs/SPEC-05-state.md)           | Store slices, loop, persistence            |
 | [docs/SPEC-06-events.md](./docs/SPEC-06-events.md)         | Events and their effects                   |
+| [docs/SPEC-07-tutorial.md](./docs/SPEC-07-tutorial.md)     | Reactive tutorial lessons and triggers     |
 
 ## Status
 

@@ -1,7 +1,8 @@
 # Roadmap
 
 Seven working days. Days 1-4 are the core; days 5-7 are polish. Feature IDs refer to
-[FEATURES.md](./FEATURES.md).
+[FEATURES.md](./FEATURES.md). Two passes follow the seven days: a visual pass and a
+tutorial pass.
 
 **If time runs short, cut in this order:** Playwright smoke test (day 7) → repair
 mechanic (F-15) → flow lines (F-19). Do not cut the power allocator or the day/night
@@ -254,3 +255,59 @@ serves under the Pages base path. References in `docs/interface.png` and `docs/n
    slowed frames enough that a throttled HUD snapshot arrived after a fixed wait, so a pause
    assertion started failing. The test now polls until the clock settles rather than
    sleeping a fixed interval — it was measuring frame rate, not the simulation.
+
+---
+
+## Tutorial Pass — after the visual pass
+
+The colony said _that_ it was failing and never _why_. `Alerts.tsx` raised the alarms and
+`QuestPanel.tsx` turned each into a one-line prompt, but nothing on screen connected a
+draining battery at night to the Battery Bank that fixes it — the lesson the simulation was
+built to teach was the one thing it never said out loud.
+
+- [x] `src/ui/tutorial/lessons.ts` — eleven lessons, each a pure predicate over `UiSnapshot`
+- [x] `src/ui/tutorial/watcher.ts` — selection outside React, on a `useStore.subscribe`, un-memoised
+- [x] `src/ui/tutorial/TutorialCard.tsx` — non-blocking card in the left column
+- [x] `src/ui/tutorial/storage.ts` — seed-keyed `localStorage`, no `SaveFile` schema bump
+- [x] `tutorial` slice in the store; `buildingCounts` added to the snapshot
+- [x] Amber signpost ring on the build-bar button that answers the live lesson
+- [x] `docs/SPEC-07-tutorial.md`
+
+**Verify:** ✅ 172 unit tests (20 new) and 16 e2e tests (1 new) pass, typecheck and lint
+clean. The e2e test runs a colony until a lesson surfaces on its own, checks that exactly
+the right build-bar button is ringed, dismisses it, and confirms it returns neither as the
+run continues nor after a reload.
+
+**Learned:**
+
+1. **A tutorial is a projection, not a subsystem.** Every trigger turned out to be already
+   sitting in `UiSnapshot` — the HUD had computed all of it for the alarms. The only field
+   that had to be added was `buildingCounts`, and only because "do you own a mine yet" is
+   the one question an alarm never asks. Nothing in `src/sim/` was touched.
+2. **The memo was the bug.** The first watcher cached the triggered set between snapshots
+   and skipped the selection when it had not moved. Two of its three suppression gates lift
+   without touching the store — the orientation card dismisses itself in local React state —
+   so the cache recorded "already considered this" for a situation it had declined to act on,
+   and any lesson raised behind that card was lost for the whole run. Deleting the cache made
+   the code both faster (a short-circuiting walk beats building a mask) and small enough to be
+   obviously correct. A memo whose invalidation depends on every reason the _caller_ might
+   ignore the result is not an optimisation, it is a second state machine.
+3. **Sticky cards, deliberately.** The first design dismissed a card when its condition
+   cleared, which meant a player who fixed the problem by accident — the one who most needed
+   the explanation — watched it vanish mid-sentence. Only a dismissal closes it now, and
+   only a dismissal is recorded as learned.
+4. **The signpost had to change colour.** Reusing the armed-placement blue for the tutorial
+   ring made "you chose this" and "you are being told about this" indistinguishable. Amber
+   separates them, and an armed button stays blue when it is both.
+5. **A negated Playwright matcher is not a "never" assertion.** `expect(card).not
+.toHaveAttribute(...)` auto-retries and passes at the first instant the card is absent, so
+   a lesson that reappeared a second later would sail through. The check now samples across a
+   fixed window instead.
+6. **Two e2e tests are flaky under parallel load, and it predates this pass.** `night is
+visibly darker than day` and `restores the colony after a reload` both fail in a full
+   `fullyParallel` run and pass in isolation. Measured rather than assumed: the same two fail
+   on a clean tree with this whole pass stashed. Both poll simulated time against wall time,
+   which is exactly what falls behind when several SwiftShader contexts share the machine —
+   the documented and correct failure mode of the loop, surfacing as a test failure. Worth
+   pinning the worker count or raising those two timeouts before it wastes anyone else's
+   afternoon.
