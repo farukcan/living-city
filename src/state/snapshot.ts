@@ -7,9 +7,16 @@
 
 import { GRACE_SOLS } from '../sim/constants.ts';
 import { effectivePopulation, isDeprived } from '../sim/population.ts';
-import { computeCaps, countKind } from '../sim/resources.ts';
+import { computeCaps, countByKind } from '../sim/resources.ts';
 import { nextLandingCrew, solsUntilLanding } from '../sim/rocket.ts';
-import type { ActiveEvent, GameOver, HistorySample, ResourceKind, SimState } from '../sim/types.ts';
+import type {
+  ActiveEvent,
+  BuildingKind,
+  GameOver,
+  HistorySample,
+  ResourceKind,
+  SimState,
+} from '../sim/types.ts';
 import { RESOURCE_KINDS } from '../sim/types.ts';
 
 /** Sols of oxygen left below which the warning stops being advisory. */
@@ -45,6 +52,11 @@ export type UiSnapshot = {
   readonly heatDemandKW: number;
   readonly wastedKW: number;
   readonly buildingCount: number;
+  /**
+   * Standing count per kind. The tutorial lessons ask questions like "does this colony own a
+   * mine yet", which the aggregate counts cannot answer; one reduce answers all of them.
+   */
+  readonly buildingCounts: Readonly<Record<BuildingKind, number>>;
   readonly habitatCount: number;
   /** Buildings a meteor has hit and nobody has repaired yet. */
   readonly damagedBuildingCount: number;
@@ -99,6 +111,7 @@ export function emptySnapshot(): UiSnapshot {
     heatDemandKW: 0,
     wastedKW: 0,
     buildingCount: 0,
+    buildingCounts: countByKind([]),
     habitatCount: 0,
     damagedBuildingCount: 0,
     waterGraceLeft: GRACE_SOLS.water,
@@ -128,6 +141,7 @@ export function projectSnapshot(sim: SimState): UiSnapshot {
   // rebuilt when the simulation steps, so reading it here would leave the HUD stale after
   // any action taken while paused — placing a building would visibly cost nothing.
   const caps = computeCaps(sim.buildings);
+  const buildingCounts = countByKind(sim.buildings);
 
   const resources = {} as Record<ResourceKind, ResourceSnapshot>;
   for (const kind of RESOURCE_KINDS) {
@@ -163,7 +177,8 @@ export function projectSnapshot(sim: SimState): UiSnapshot {
     heatDemandKW: report.power.heatDemandKW,
     wastedKW: report.power.wastedKW,
     buildingCount: sim.buildings.length,
-    habitatCount: countKind(sim.buildings, 'habitat'),
+    buildingCounts,
+    habitatCount: buildingCounts.habitat,
     damagedBuildingCount: sim.buildings.reduce(
       (total, building) => (building.status === 'damaged' ? total + 1 : total),
       0,

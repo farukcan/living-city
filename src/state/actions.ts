@@ -106,6 +106,8 @@ export function newColony(seed: number): void {
   store.selectBuilding(null);
   store.setBuildMode(null);
   store.setNotice(null);
+  // After `setSim`, so the cleared progress is written against the new colony's seed.
+  store.resetTutorials();
   store.publishSnapshot();
 }
 

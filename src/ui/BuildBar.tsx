@@ -2,10 +2,16 @@ import { BUILDABLE_KINDS, definitionOf } from '../sim/constants.ts';
 import type { BuildingKind } from '../sim/types.ts';
 import { useStore } from '../state/store.ts';
 import { BUILDING_ICONS, MineralIcon } from './icons.tsx';
+import { LESSON_BY_ID } from './tutorial/lessons.ts';
 
 /**
  * Building picker. Selecting a kind arms placement; the ghost in the scene then previews
  * it under the cursor and the click commits.
+ *
+ * A live tutorial lesson also signposts its answer here with an amber ring. It is amber and
+ * not the armed-placement blue on purpose: the two states mean different things — "you have
+ * chosen this" against "this is what you are being told about" — and a player who cannot
+ * tell them apart learns the wrong lesson about their own click.
  */
 
 function BuildButton({ kind }: { kind: BuildingKind }) {
@@ -13,19 +19,29 @@ function BuildButton({ kind }: { kind: BuildingKind }) {
   const buildMode = useStore((state) => state.interaction.buildMode);
   const setBuildMode = useStore((state) => state.setBuildMode);
   const affordable = useStore((state) => state.sim.stocks.minerals >= definition.cost);
+  // Selects the kind, not the lesson: a `BuildingKind | null` is stable under Object.is, so
+  // this re-renders when the signposted button changes and never on a snapshot tick.
+  const signposted = useStore((state) => {
+    const id = state.tutorial.currentId;
+    return id === null ? null : LESSON_BY_ID[id].highlight;
+  });
   const Icon = BUILDING_ICONS[kind];
 
   const active = buildMode === kind;
+  const highlighted = !active && signposted === kind;
 
   return (
     <button
       type="button"
       title={`${definition.label} — ${definition.description}`}
       onClick={() => setBuildMode(active ? null : kind)}
+      data-signposted={highlighted ? 'true' : undefined}
       className={`flex w-[5.75rem] flex-col items-center gap-1 rounded-lg border px-2 py-2 transition-colors ${
         active
           ? 'border-[#4FC3F7] bg-[#4FC3F7]/20 shadow-[0_0_18px_-4px_#4FC3F7]'
-          : 'border-white/10 bg-gradient-to-b from-white/[0.06] to-black/45 hover:from-white/[0.12]'
+          : highlighted
+            ? 'animate-pulse border-[#FFB74D] bg-[#FFB74D]/15 shadow-[0_0_20px_-4px_#FFB74D]'
+            : 'border-white/10 bg-gradient-to-b from-white/[0.06] to-black/45 hover:from-white/[0.12]'
       } ${affordable ? '' : 'opacity-45'}`}
     >
       <Icon className="h-6 w-6 text-white/85" />

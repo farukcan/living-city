@@ -24,6 +24,12 @@ type Store = {
     showFlowLines: boolean;
     showProfiler: boolean;
   };
+
+  // Event-rate, but written by a watcher rather than by a click. See SPEC-07.
+  tutorial: {
+    currentId: TutorialLessonId | null;
+    seenIds: TutorialLessonId[];
+  };
 };
 ```
 
@@ -32,6 +38,7 @@ type Store = {
 | `sim`         | 10 Hz × speed | Renderer | `useSimStore.getState()` inside `useFrame` |
 | `ui`          | 4 Hz          | HUD      | `useSimStore(s => s.ui.xxx)` selectors     |
 | `interaction` | user actions  | Both     | ordinary selectors                         |
+| `tutorial`    | once a lesson | HUD      | ordinary selectors                         |
 
 `UiSnapshot` carries stocks, net flows, caps, population, sol, survival score, active
 events and the sparkline series — everything the HUD shows and nothing else. It is a flat
@@ -52,6 +59,14 @@ win threshold, the latter to surface the "repair" prompt for as long as it stays
 zero. Both are plain reduces over `sim.buildings`, computed fresh each snapshot rather than
 stored on `SimState` — nothing else needs them, so there is no reason to carry them
 further than the projection that does.
+
+`buildingCounts` is the same idea generalised: one `countByKind` pass gives every kind's
+standing count, which is what lets a tutorial lesson ask "does this colony own a mine yet".
+`habitatCount` reads from it rather than walking the list a second time.
+
+The `tutorial` slice is separate from `interaction` rather than folded into it because it is
+not something the user is doing: it has its own persistence key, its own reset rule, and it
+is written by a watcher outside React. See [SPEC-07](./SPEC-07-tutorial.md).
 
 ## The Loop
 
@@ -129,15 +144,15 @@ flowchart LR
 All in `src/state/actions.ts`. Each validates against `SimState`, then applies a pure
 transform. Actions never touch the renderer directly.
 
-| Action                      | Validation                                                       | Effect                                     |
-| --------------------------- | ---------------------------------------------------------------- | ------------------------------------------ |
-| `placeBuilding(kind, q, r)` | tile exists, buildable, empty, deposit matches, minerals suffice | deducts cost, appends building, marks tile |
-| `demolishBuilding(id)`      | building exists                                                  | refunds 50%, removes it, clears the tile   |
-| `toggleIdle(id)`            | building exists, not damaged                                     | flips `active` ⇄ `idle`                    |
-| `repairBuilding(id)`        | damaged, minerals suffice                                        | deducts 30% of cost, sets `active`         |
-| `setSpeed(n)`               | —                                                                | interaction slice only                     |
-| `newColony(seed?)`          | —                                                                | regenerates world, reseeds, clears storage |
-| `restartColony(seed)`       | —                                                                | clears the save, new colony, resumes at 1x |
+| Action                      | Validation                                                       | Effect                                                           |
+| --------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `placeBuilding(kind, q, r)` | tile exists, buildable, empty, deposit matches, minerals suffice | deducts cost, appends building, marks tile                       |
+| `demolishBuilding(id)`      | building exists                                                  | refunds 50%, removes it, clears the tile                         |
+| `toggleIdle(id)`            | building exists, not damaged                                     | flips `active` ⇄ `idle`                                          |
+| `repairBuilding(id)`        | damaged, minerals suffice                                        | deducts 30% of cost, sets `active`                               |
+| `setSpeed(n)`               | —                                                                | interaction slice only                                           |
+| `newColony(seed?)`          | —                                                                | regenerates world, reseeds, clears storage and tutorial progress |
+| `restartColony(seed)`       | —                                                                | clears the save, new colony, resumes at 1x                       |
 
 `placeBuilding`, `demolishBuilding` and `toggleIdle` additionally refuse any kind whose
 definition is not `buildable` — the Landing Pad. That check lives here rather than in
