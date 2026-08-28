@@ -1,5 +1,13 @@
 ![Living Mars Machine](./media/logo-wordmark.png)
 
+[![Deploy](https://img.shields.io/github/actions/workflow/status/farukcan/living-mars-machine/deploy.yml?branch=main&label=deploy&logo=githubactions&logoColor=white&style=flat-square)](https://github.com/farukcan/living-mars-machine/actions/workflows/deploy.yml)
+[![Play](https://img.shields.io/badge/play-live%20demo-c1440e?style=flat-square&logo=github)](https://farukcan.github.io/living-mars-machine/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Three.js](https://img.shields.io/badge/Three.js-r185-000000?style=flat-square&logo=threedotjs&logoColor=white)](https://threejs.org/)
+[![Vite](https://img.shields.io/badge/Vite-646cff?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+
 # Living Mars Machine — Mars Colony Simulator
 
 A browser Mars colony that runs itself: place buildings on procedurally generated hex
