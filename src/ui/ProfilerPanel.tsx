@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { readProfilerSamples, subscribeProfiler } from '../state/profiler.ts';
 import type { ProfilerSample } from '../state/profiler.ts';
 import { useStore } from '../state/store.ts';
+import { PANEL } from './panel.ts';
 
 /**
  * Frame profiler overlay, toggled with F3.
@@ -169,10 +170,7 @@ function ProfilerReadout() {
   const latest = samples.at(-1) ?? null;
 
   return (
-    <div
-      data-testid="profiler-panel"
-      className="pointer-events-auto w-[16.5rem] rounded-md border border-white/10 bg-black/50 p-2.5 backdrop-blur-sm"
-    >
+    <div data-testid="profiler-panel" className={`pointer-events-auto w-full p-2.5 ${PANEL}`}>
       <div className="mb-1.5 flex items-baseline justify-between">
         <span className="text-[10px] uppercase tracking-wider text-white/50">Profiler</span>
         <span className="text-[10px] text-white/35">F3</span>

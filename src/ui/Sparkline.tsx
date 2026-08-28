@@ -3,6 +3,7 @@ import { HOURS_PER_SOL } from '../sim/constants.ts';
 import type { HistorySample } from '../sim/types.ts';
 import { useStore } from '../state/store.ts';
 import { formatAmount } from './format.ts';
+import { PANEL } from './panel.ts';
 
 /**
  * Resource history as hand-rolled SVG.
@@ -76,7 +77,7 @@ export function Sparkline() {
   );
 
   return (
-    <div className="w-[16.5rem] rounded-md border border-white/10 bg-black/40 p-2.5 backdrop-blur-sm">
+    <div className={`w-full p-2.5 ${PANEL}`}>
       <div className="mb-1 flex items-baseline justify-between">
         <span className="text-[10px] uppercase tracking-wider text-white/50">Reserves</span>
         <span className="text-[10px] text-white/35">{historyLabel(history.length)}</span>

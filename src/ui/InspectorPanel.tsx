@@ -4,6 +4,7 @@ import { repairCost } from '../sim/placement.ts';
 import type { Building, ResourceKind } from '../sim/types.ts';
 import { demolishBuilding, repairBuilding, toggleIdle } from '../state/actions.ts';
 import { useStore } from '../state/store.ts';
+import { PANEL } from './panel.ts';
 import { CONCEPT_ART, CREW_ROCKET_ART } from './conceptArt.ts';
 import { formatAmount } from './format.ts';
 
@@ -107,7 +108,7 @@ export function InspectorPanel() {
   // Uncropped art makes this panel tall enough to overrun a short viewport, where the
   // controls at the foot are the part that would be lost. Scroll instead of clipping.
   return (
-    <div className="pointer-events-auto max-h-[calc(100dvh-11rem)] w-64 overflow-y-auto rounded-md border border-white/10 bg-black/45 p-3 backdrop-blur-sm">
+    <div className={`pointer-events-auto max-h-full w-full overflow-y-auto p-3 ${PANEL}`}>
       {/* Full-bleed: negative margins undo the panel padding so the art meets the border. */}
       <div className="-mx-3 -mt-3 mb-2.5">
         <img

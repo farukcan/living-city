@@ -1,5 +1,6 @@
 import { WIN_HABITATS, WIN_POPULATION, WIN_SOLS } from '../sim/constants.ts';
 import { useStore } from '../state/store.ts';
+import { PANEL, PANEL_LABEL } from './panel.ts';
 
 /**
  * The colony's objectives, always on screen in one small panel.
@@ -78,11 +79,8 @@ export function QuestPanel() {
     foodDeprived || waterDeprived || powerFailing || damagedBuildingCount > 0 || oxygenCritical;
 
   return (
-    <div
-      data-testid="quest-panel"
-      className="w-48 rounded-lg border border-white/10 bg-gradient-to-b from-white/[0.06] to-black/45 p-2.5 shadow-lg shadow-black/40 backdrop-blur-sm"
-    >
-      <div className="text-[10px] uppercase tracking-wider text-white/45">Objectives</div>
+    <div data-testid="quest-panel" className={`w-full p-2.5 ${PANEL}`}>
+      <div className={PANEL_LABEL}>Objectives</div>
       <div className="mt-1">
         <WinQuestRow id="survive" current={sol} target={WIN_SOLS} />
         <WinQuestRow id="habitats" current={habitatCount} target={WIN_HABITATS} />

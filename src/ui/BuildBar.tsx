@@ -48,7 +48,7 @@ export function BuildBar() {
   const setBuildMode = useStore((state) => state.setBuildMode);
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-3">
+    <div className="pointer-events-none flex shrink-0 flex-col items-center gap-2 p-3">
       {notice !== null && (
         <div className="pointer-events-auto rounded-md border border-[#EF5350]/40 bg-[#EF5350]/15 px-3 py-1.5 text-xs text-[#FFC9C7]">
           {notice}

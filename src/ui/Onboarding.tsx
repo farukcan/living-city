@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import logoLockup from '../../media/logo-lockup.svg';
 import { useStore } from '../state/store.ts';
 
 /**
@@ -52,13 +53,14 @@ export function Onboarding() {
   if (!visible) return null;
 
   return (
-    <div className="pointer-events-auto w-64 rounded-md border border-[#4FC3F7]/30 bg-black/55 p-3 backdrop-blur-sm">
-      <div className="flex items-start justify-between gap-2">
-        <div className="text-sm text-white/90">Living Machine</div>
+    <div className="pointer-events-auto w-full rounded-lg border border-[#4FC3F7]/30 bg-black/55 p-3 shadow-lg shadow-black/40 backdrop-blur-sm">
+      <div className="flex items-start gap-2">
+        {/* The tagline-free lockup: at this width the tagline would only be texture. */}
+        <img src={logoLockup} alt="Living Mars Machine" className="min-w-0 flex-1" />
         <button
           type="button"
           onClick={dismiss}
-          className="rounded px-1.5 text-white/40 hover:bg-white/10 hover:text-white/80"
+          className="-mr-1 rounded px-1.5 text-white/40 hover:bg-white/10 hover:text-white/80"
           aria-label="Dismiss"
         >
           ✕

@@ -2,6 +2,7 @@ import { definitionOf } from '../sim/constants.ts';
 import type { ResourceKind } from '../sim/types.ts';
 import { useStore } from '../state/store.ts';
 import { formatAmount } from './format.ts';
+import { PANEL } from './panel.ts';
 
 /**
  * What the building under the cursor makes and costs, without having to click it.
@@ -38,7 +39,7 @@ export function HoverCard() {
   const inputs = Object.entries(definition.consumes);
 
   return (
-    <div className="pointer-events-none rounded-md border border-white/10 bg-black/60 px-2.5 py-2 backdrop-blur-sm">
+    <div className={`pointer-events-none w-full px-2.5 py-2 ${PANEL}`}>
       <div className="flex items-baseline gap-2">
         <span className="text-xs text-white/90">{definition.label}</span>
         <span

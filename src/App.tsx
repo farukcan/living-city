@@ -13,7 +13,9 @@ import { DesktopNotice, Onboarding } from './ui/Onboarding.tsx';
 import { ProfilerPanel } from './ui/ProfilerPanel.tsx';
 import { QuestPanel } from './ui/QuestPanel.tsx';
 import { Sparkline } from './ui/Sparkline.tsx';
+import { StatusPanel } from './ui/StatusPanel.tsx';
 import { TopBar } from './ui/TopBar.tsx';
+import { COLUMN_WIDTH } from './ui/panel.ts';
 
 export function App() {
   const params = new URLSearchParams(window.location.search);
@@ -51,36 +53,54 @@ export function App() {
   return (
     <div className="relative h-dvh w-dvw overflow-hidden bg-[#1A1626]">
       <Scene />
-      <TopBar />
-      <EventToast />
-      <CriticalWarnings />
 
-      <div className="pointer-events-none absolute left-3 top-28 flex flex-col gap-2">
-        <InspectorPanel />
-        <Onboarding />
-      </div>
+      {/* The HUD is a stack of full-width rows, not a pile of hand-placed layers: the
+          readout strip, an alarm row, a middle band that takes whatever is left, and the
+          build bar. Nothing is offset by a hardcoded `top-*`, so a strip that wraps onto a
+          second line pushes everything below it down instead of being covered. */}
+      <div className="pointer-events-none absolute inset-0 flex flex-col">
+        <TopBar />
 
-      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-        <QuestPanel />
+        {/* Alarms get their own row directly under the readings they contradict, centred on
+            the viewport rather than on whatever the side columns leave over. */}
+        <div className="flex shrink-0 flex-col items-center gap-2 px-3">
+          <OutageAlert />
+          <CriticalWarnings />
+          <EventToast />
+        </div>
+
+        <div className="flex min-h-0 flex-1 gap-2 p-3">
+          {/* Left: what the player opened, with the profiler pinned to the foot. */}
+          <div className={`flex min-h-0 shrink-0 flex-col gap-2 ${COLUMN_WIDTH}`}>
+            <InspectorPanel />
+            <Onboarding />
+            <div className="mt-auto">
+              <ProfilerPanel />
+            </div>
+          </div>
+
+          {/* The world keeps the middle. Nothing is allowed to float over it. */}
+          <div className="flex-1" />
+
+          {/* Right: how the run is going, what it is aiming at, and the readouts. */}
+          <div className={`flex min-h-0 shrink-0 flex-col items-end gap-2 ${COLUMN_WIDTH}`}>
+            <StatusPanel />
+            <div className="my-auto w-full">
+              <QuestPanel />
+            </div>
+            <HoverCard />
+            <div className="pointer-events-auto w-full">
+              <Sparkline />
+            </div>
+          </div>
+        </div>
+
+        <BuildBar />
       </div>
 
       <DesktopNotice />
 
-      <div className="pointer-events-none absolute bottom-28 left-3">
-        <ProfilerPanel />
-      </div>
-
-      <div className="pointer-events-none absolute bottom-28 right-3 flex flex-col items-end gap-2">
-        <HoverCard />
-        <div className="pointer-events-auto">
-          <Sparkline />
-        </div>
-      </div>
-
-      <BuildBar />
-
-      {/* Last, so the outage banner covers the TopBar and the ending covers everything. */}
-      <OutageAlert />
+      {/* Last, so the ending covers everything. */}
       <GameOverOverlay />
     </div>
   );

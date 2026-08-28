@@ -10,15 +10,15 @@ import { formatDays } from './format.ts';
  */
 
 /** Critical panel recipe, shared by every alert here. */
-const PANEL = 'rounded-md border border-[#EF5350]/40 bg-[#EF5350]/15 px-3 py-1.5 text-[#FFC9C7]';
+const ALERT = 'rounded-lg border border-[#EF5350]/40 bg-[#EF5350]/15 px-3 py-1.5 text-[#FFC9C7]';
 
 /**
  * A blinking banner and a red edge glow while the grid is down.
  *
- * Sits above the TopBar because an outage outranks every other reading on screen: nothing is
- * producing anything, and the oxygen the colony is breathing is the last tank it has. The
- * vignette is DOM rather than the postprocessing pass — cheaper, blinks with the same class,
- * and does not couple React to the canvas for a purely decorative effect.
+ * Heads the HUD's centre lane because an outage outranks every other reading on screen:
+ * nothing is producing anything, and the oxygen the colony is breathing is the last tank it
+ * has. The vignette is DOM rather than the postprocessing pass — cheaper, blinks with the
+ * same class, and does not couple React to the canvas for a purely decorative effect.
  */
 export function OutageAlert() {
   const outage = useStore((state) => state.ui.outage);
@@ -30,11 +30,8 @@ export function OutageAlert() {
         className="pointer-events-none absolute inset-0 z-20 animate-pulse"
         style={{ boxShadow: 'inset 0 0 220px 60px rgba(239,83,80,0.42)' }}
       />
-      <div
-        data-testid="outage-banner"
-        className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center p-3"
-      >
-        <div className={`${PANEL} animate-pulse text-center shadow-lg shadow-black/40`}>
+      <div data-testid="outage-banner" className="pointer-events-none flex justify-center">
+        <div className={`${ALERT} animate-pulse text-center shadow-lg shadow-black/40`}>
           <div className="text-sm font-semibold uppercase tracking-wider">Grid Outage</div>
           <div className="text-[11px] text-[#FFC9C7]/80">
             The battery is empty and the sun is not covering demand. Nothing is producing.
@@ -47,7 +44,7 @@ export function OutageAlert() {
 
 function Warning({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className={`${PANEL} w-64 backdrop-blur-sm`}>
+    <div className={`${ALERT} w-64 backdrop-blur-sm`}>
       <div className="text-[11px] font-semibold uppercase tracking-wider">{title}</div>
       <div className="text-[10px] leading-snug text-[#FFC9C7]/80">{detail}</div>
     </div>
@@ -77,10 +74,7 @@ export function CriticalWarnings() {
   if (!oxygenCritical && !waterDeprived && !foodDeprived) return null;
 
   return (
-    <div
-      data-testid="critical-warnings"
-      className="pointer-events-none absolute left-1/2 top-24 z-10 flex -translate-x-1/2 flex-col gap-1.5"
-    >
+    <div data-testid="critical-warnings" className="pointer-events-none flex flex-col gap-1.5">
       {oxygenCritical && (
         <Warning
           title="Oxygen critical"
