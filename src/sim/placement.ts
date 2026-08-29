@@ -12,7 +12,7 @@ import { findTile } from './terrain.ts';
 import type { Building, BuildingKind, SimState, Tile } from './types.ts';
 
 export type PlacementRejection =
-  'off-grid' | 'not-buildable' | 'occupied' | 'wrong-deposit' | 'insufficient-minerals';
+  'off-grid' | 'occupied' | 'wrong-deposit' | 'insufficient-minerals';
 
 export type PlacementCheck =
   | { readonly ok: true; readonly tile: Tile }
@@ -30,9 +30,7 @@ export function checkPlacement(
   if (tile === null) {
     return { ok: false, reason: 'off-grid', message: 'Outside the survey area.' };
   }
-  if (!tile.buildable) {
-    return { ok: false, reason: 'not-buildable', message: 'Ground is too steep.' };
-  }
+  // Steep ground is not a rejection: the crew clears the boulders as part of the build.
   if (tile.buildingId !== null) {
     return { ok: false, reason: 'occupied', message: 'Tile is already occupied.' };
   }

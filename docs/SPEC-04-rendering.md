@@ -15,7 +15,8 @@ screenshot showed the scene looking like a board game rather than a place:
    void, and no amount of building detail fixes it.
 2. **Ambient occlusion.** Contact shadows are what seat a building on its tile. Nothing
    else in the pipeline darkens the crevice where geometry meets geometry.
-3. **Scatter.** Boulders on unbuildable tiles, pebbles on the rest, and a hashed colour
+3. **Scatter.** Boulders on steep tiles — cleared where a building stands — pebbles on
+   the rest, and a hashed colour
    wobble per tile. A field where every tile of an elevation is one flat colour reads as a
    spreadsheet.
 4. **Pipework.** Physical pipes between buildings turn a set of models parked on tiles into
@@ -97,6 +98,7 @@ slabs, placement ghosts) needs the same rotation.
 | Buildings      | up to ~200            | 1 per type in use    |
 | Pipes          | one per link          | 1                    |
 | Flow packets   | 3 per link            | 1                    |
+| Damage badges  | one per damaged bldg  | 1 each               |
 
 Tiles are split into three meshes rather than tinted within one because ice needs a
 different _material_ — a smooth, low-roughness sheet that catches the sun. A grey tint on a
@@ -222,6 +224,22 @@ thing in both places:
 Hand-drawn inline SVG on a 24×24 grid, in `src/ui/icons.tsx` — no icon package, for the same
 reason the 3D is procedural. The building icons are miniatures of their own silhouettes, so
 the build bar reads as a catalogue of what is on the map rather than as abstract symbols.
+
+### Damage badges
+
+A meteor's damage tint and the lean in `writeMatrices` only read once the player is already
+looking at that building, so `render/DamageMarkers.tsx` floats a warning triangle over every
+damaged one. It is a `Sprite`, which faces the camera at any orbit angle, with
+`sizeAttenuation` off so it holds one size on screen — a wrecked mine at the grid's edge is
+as legible as one under the cursor — and `depthTest` off, because a fault hidden behind a
+ridge is a fault that never gets repaired. The badge is drawn into a canvas at load rather
+than imported, matching the rest of the art in the project, and anchored off the building
+geometry's own bounding box: a habitat dome and a solar mast are nowhere near the same
+height, and a fixed offset would clip one and float the other.
+
+One sprite per damaged building rather than an instanced billboard. Meteors hit one building
+at a time and repairs clear them, so the list is usually empty and never long enough to earn
+the shader.
 
 ## Day / Night
 
@@ -362,17 +380,26 @@ stay with the structural `useLayoutEffect` that runs on building-list changes.
 
 `OrbitControls` with:
 
-| Constraint  | Value                                                              |
-| ----------- | ------------------------------------------------------------------ |
-| Polar angle | 0.15π .. 0.45π (never below the horizon, never straight down)      |
-| Distance    | 8 .. 45                                                            |
-| Default     | `[18.2, 11.2, 18.2]` — 40% further than the original framing       |
-| Target      | clamped to the grid bounds so the colony cannot be lost off-screen |
-| Damping     | 0.08                                                               |
+| Constraint  | Value                                                                  |
+| ----------- | ---------------------------------------------------------------------- |
+| Polar angle | 0.15π .. 0.49π (never below the horizon, never straight down)          |
+| Distance    | 5 .. 45                                                                |
+| Default     | `[18.2, 11.2, 18.2]` — 40% further than the original framing           |
+| Target      | clamped to the grid bounds so the colony cannot be lost off-screen     |
+| Damping     | 0.08                                                                   |
+| Keyboard    | WASD and the arrow keys pan, at 0.5 world units/s per unit of distance |
 
 Pan on right-drag or two-finger drag, orbit on left-drag, zoom on wheel or pinch. Left
 click without drag is a selection or placement action, so the click/drag threshold is
 explicit rather than inherited.
+
+Keyboard pan moves the target and the camera by the same vector, along the camera's own
+heading flattened onto the ground plane, so W is always "further into the view" whatever
+the orbit angle. Speed scales with distance: at full zoom-out the same key press has to
+cover far more ground to feel like the same motion. Held keys are read by the frame loop
+rather than stepped per event, which is what makes the motion frame-rate independent; a
+`blur` listener clears them, since a key held while the tab loses focus never reports its
+keyup.
 
 ## Performance Budget
 

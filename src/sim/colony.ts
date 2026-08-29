@@ -51,7 +51,7 @@ function candidateTiles(state: SimState, deposit: DepositKind | null): Tile[] {
   return state.terrain.tiles
     .filter(
       (tile) =>
-        tile.buildable &&
+        !tile.steep &&
         tile.buildingId === null &&
         (deposit === null ? tile.deposit === 'none' : tile.deposit === deposit),
     )
@@ -89,6 +89,8 @@ export function createColony(seed: number): SimState {
     stocks: { ...STARTING_STOCKS, minerals: STARTING_CONSTRUCTION_BUDGET },
     population: STARTING_POPULATION,
     deprivation: { water: 0, food: 0 },
+    deathsThisSol: 0,
+    deathsPreviousSol: 0,
     gameOver: null,
     activeEvents: [],
     notices: [],

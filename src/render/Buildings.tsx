@@ -30,7 +30,7 @@ const scratchObject = new THREE.Object3D();
  * the widest building (the solar array, 1.32 units) has to fit inside it. Past about 1.2
  * neighbouring buildings visibly overlap, which in a dense colony reads as a bug.
  */
-const BUILDING_SCALE = 1.2;
+export const BUILDING_SCALE = 1.2;
 
 /** Per-instance tint, multiplied with the geometry's own vertex colours. */
 const STATUS_TINT: Readonly<Record<Building['status'], THREE.Color>> = {

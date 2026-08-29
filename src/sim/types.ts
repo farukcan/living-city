@@ -21,8 +21,11 @@ export type Tile = {
   /** Normalised 0..1; world height is `elevation × MAX_ELEVATION`. */
   readonly elevation: number;
   readonly deposit: DepositKind;
-  /** False when the slope to any neighbour exceeds SLOPE_LIMIT. */
-  readonly buildable: boolean;
+  /**
+   * True when the slope to any neighbour exceeds SLOPE_LIMIT. Marks the tile with boulders
+   * and keeps deposits off it; it does not block placement.
+   */
+  readonly steep: boolean;
   readonly buildingId: string | null;
 };
 
@@ -238,6 +241,16 @@ export type SimState = {
   /** Fractional internally; rounded only for display. */
   readonly population: number;
   readonly deprivation: DeprivationTimers;
+  /**
+   * Colonists lost during the current sol and during the one before it.
+   *
+   * Two buckets rather than a rolling window: the HUD only ever asks for a trailing-sol
+   * toll, and rolling one bucket at the sol boundary costs two numbers instead of a ring
+   * buffer. Not saved, for the same reason `history` is not — a toll that covers one sol is
+   * worth nothing by the time a save is reopened.
+   */
+  readonly deathsThisSol: number;
+  readonly deathsPreviousSol: number;
   /** Null while the colony lives. Once set, the simulation stops advancing. */
   readonly gameOver: GameOver | null;
   readonly activeEvents: readonly ActiveEvent[];

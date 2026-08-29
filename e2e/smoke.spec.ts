@@ -186,6 +186,27 @@ async function readStock(page: Page, kind: string): Promise<number> {
   return value;
 }
 
+/** Poll budget for a stock to reflect an action: comfortably over the 250 ms snapshot. */
+const STOCK_SETTLE_ATTEMPTS = 6;
+const STOCK_SETTLE_INTERVAL_MS = 120;
+
+/**
+ * Reads a stock back after an action, giving the 4 Hz HUD snapshot time to catch up.
+ *
+ * Returns as soon as the figure moves off `unchanged`, and gives up quietly if it never
+ * does — a refused placement has nothing to report, and must not stall a sweep that is
+ * still looking for a tile that works. A fixed wait cannot do both: too short and an
+ * accepted placement reads as refused, which clicks again and buys a second building.
+ */
+async function settledStock(page: Page, kind: string, unchanged: number): Promise<number> {
+  for (let attempt = 0; attempt < STOCK_SETTLE_ATTEMPTS; attempt++) {
+    await page.waitForTimeout(STOCK_SETTLE_INTERVAL_MS);
+    const value = await readStock(page, kind);
+    if (value !== unchanged) return value;
+  }
+  return unchanged;
+}
+
 test('runs the simulation on a fixed-timestep loop', async ({ page }) => {
   await page.goto('/');
   await waitForCanvas(page);
@@ -227,6 +248,9 @@ test('runs the simulation on a fixed-timestep loop', async ({ page }) => {
 });
 
 test('places a building and charges its mineral cost', async ({ page }) => {
+  // The sweep below polls after every click, so a run that has to try most of the grid can
+  // outlast the default budget on a loaded machine.
+  test.setTimeout(60_000);
   await page.goto('/');
   await waitForCanvas(page);
   await page.getByRole('button', { name: '❚❚' }).click(); // Pause so mining does not skew the count.
@@ -240,16 +264,15 @@ test('places a building and charges its mineral cost', async ({ page }) => {
   expect(box).not.toBeNull();
   if (!box) return;
 
-  // Sweep the colony until one click lands on a free, flat tile. The centre is dense with
-  // starting buildings, which absorb the click as a selection, so the sweep works outwards.
+  // Sweep the colony until one click lands on a free tile. The centre is dense with starting
+  // buildings, which absorb the click as a selection, so the sweep works outwards.
   for (const offsetY of [0.62, 0.5, 0.72, 0.42]) {
     for (const offsetX of [-0.3, -0.2, 0.2, 0.3, -0.1, 0.1, 0]) {
       const x = box.x + box.width * (0.5 + offsetX);
       const y = box.y + box.height * offsetY;
       await page.mouse.move(x, y);
       await page.mouse.click(x, y);
-      await page.waitForTimeout(120);
-      const after = await readStock(page, 'minerals');
+      const after = await settledStock(page, 'minerals', before);
       if (after < before) {
         expect(before - after).toBeCloseTo(20, 0); // Solar Array costs 20.
         return;
@@ -306,7 +329,7 @@ test('refuses an invalid placement and says why', async ({ page }) => {
   expect(box).not.toBeNull();
   if (!box) return;
 
-  const rejection = page.getByText(/ice deposit|already occupied|too steep|Needs \d+ minerals/i);
+  const rejection = page.getByText(/ice deposit|already occupied|Needs \d+ minerals/i);
   for (const offsetX of [-0.28, -0.18, -0.08, 0.02, 0.12, 0.22, 0.32]) {
     for (const offsetY of [0.48, 0.6]) {
       const x = box.x + box.width * (0.5 + offsetX);

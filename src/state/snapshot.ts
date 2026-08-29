@@ -61,6 +61,12 @@ export type UiSnapshot = {
   /** Buildings a meteor has hit and nobody has repaired yet. */
   readonly damagedBuildingCount: number;
   /**
+   * Colonists lost over the trailing sol. The previous sol's bucket counts for the fraction
+   * of it still inside the window: exact at a sol boundary, and an even-spread estimate in
+   * between, which is fair because deaths here are a continuous rate rather than events.
+   */
+  readonly recentDeaths: number;
+  /**
    * Sols of grace left before deaths begin; negative once they have. Two flat numbers rather
    * than the timers object, which is a fresh allocation every tick and would re-render every
    * subscriber four times a second regardless of whether anything changed.
@@ -114,6 +120,7 @@ export function emptySnapshot(): UiSnapshot {
     buildingCounts: countByKind([]),
     habitatCount: 0,
     damagedBuildingCount: 0,
+    recentDeaths: 0,
     waterGraceLeft: GRACE_SOLS.water,
     foodGraceLeft: GRACE_SOLS.food,
     waterDeprived: false,
@@ -183,6 +190,7 @@ export function projectSnapshot(sim: SimState): UiSnapshot {
       (total, building) => (building.status === 'damaged' ? total + 1 : total),
       0,
     ),
+    recentDeaths: sim.deathsThisSol + sim.deathsPreviousSol * (1 - sim.solTime),
     waterGraceLeft: GRACE_SOLS.water - sim.deprivation.water,
     foodGraceLeft: GRACE_SOLS.food - sim.deprivation.food,
     waterDeprived: isDeprived(sim.stocks.water, effective, 'water'),

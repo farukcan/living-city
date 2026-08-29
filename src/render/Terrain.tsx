@@ -223,14 +223,18 @@ type ScatterProps = {
 };
 
 /**
- * Boulders on unbuildable tiles.
+ * Boulders on steep tiles, cleared where a building stands.
  *
- * Geometry rather than an overlay colour, so the reason a tile is unavailable survives
- * having a hover highlight drawn on top of it.
+ * Geometry rather than an overlay colour, so the rough ground survives having a hover
+ * highlight drawn on top of it. Building on such a tile is allowed and clears its boulders,
+ * the same way `Pebbles` yields to a building below.
  */
 export function Outcrops({ field }: ScatterProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const steepTiles = useMemo(() => field.tiles.filter((tile) => !tile.buildable), [field]);
+  const steepTiles = useMemo(
+    () => field.tiles.filter((tile) => tile.steep && tile.buildingId === null),
+    [field],
+  );
 
   const geometry = useMemo(() => {
     // A low-poly icosahedron reads as a weathered boulder; a cone reads as a traffic cone.
@@ -278,7 +282,7 @@ export function Outcrops({ field }: ScatterProps) {
 }
 
 /**
- * Loose pebbles scattered over the buildable ground.
+ * Loose pebbles scattered over the open ground.
  *
  * Pure decoration, and the cheapest possible fix for the "empty board" feeling: three
  * stones per tile, one draw call, no per-frame work.

@@ -42,6 +42,38 @@ export function OutageAlert() {
   );
 }
 
+/** Below this the toll rounds to nobody, and a banner reporting no deaths is noise. */
+const CASUALTY_FLOOR = 0.5;
+
+/**
+ * What the last sol cost in colonists.
+ *
+ * Deaths are a rate rather than an event, so there is no toast to fire them and nothing else
+ * on the HUD states the loss outright — the population readout drifts down slowly enough to
+ * miss entirely. The deprivation warnings above say a colony is *about to* start dying; this
+ * is the only place that says it already has.
+ */
+export function CasualtyAlert() {
+  const recentDeaths = useStore((state) => state.ui.recentDeaths);
+  const gameOver = useStore((state) => state.ui.gameOver);
+
+  // The game-over screen says all of this, and says it better.
+  if (gameOver !== null || recentDeaths < CASUALTY_FLOOR) return null;
+
+  const lost = Math.round(recentDeaths);
+
+  return (
+    <div data-testid="casualty-alert" className="pointer-events-none flex justify-center">
+      <div className={`${ALERT} text-center shadow-lg shadow-black/40`}>
+        <div className="text-[11px] font-semibold uppercase tracking-wider">Colonists lost</div>
+        <div className="text-[10px] text-[#FFC9C7]/80">
+          {lost === 1 ? '1 colonist has' : `${lost} colonists have`} died in the last sol.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Warning({ title, detail }: { title: string; detail: string }) {
   return (
     <div className={`${ALERT} w-64 backdrop-blur-sm`}>

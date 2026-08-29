@@ -53,12 +53,12 @@ flowchart LR
     SEED --> N3[fBm offset B · ore]
     N1 --> ELEV[elevation 0..1]
     ELEV --> SLOPE[slope from 6 neighbours]
-    SLOPE --> BUILD{buildable?}
+    SLOPE --> STEEP{steep?}
     N2 --> ICE{ice deposit}
     N3 --> ORE{ore deposit}
     ELEV --> ICE
     ELEV --> ORE
-    BUILD --> TILE[Tile]
+    STEEP --> TILE[Tile]
     ICE --> TILE
     ORE --> TILE
 ```
@@ -69,7 +69,7 @@ type Tile = {
   r: number;
   elevation: number; // 0..1, world height = elevation × MAX_ELEVATION
   deposit: 'none' | 'ice' | 'ore';
-  buildable: boolean; // slope below threshold
+  steep: boolean; // slope above threshold — boulders, not a placement block
   buildingId: string | null;
 };
 ```
@@ -81,6 +81,8 @@ type Tile = {
 | `NOISE_SCALE`         | 0.18 (elevation)                      |
 | `DEPOSIT_NOISE_SCALE` | 0.55 (ice and ore)                    |
 | `SLOPE_LIMIT`         | 0.25 elevation delta to any neighbour |
+
+`SLOPE_LIMIT` marks rough ground; it does not gate placement. See "Steep tiles" below.
 
 Deposits sample at three times the elevation frequency. At the elevation scale a single
 noise feature spans a third of the map, which yields one enormous ice field rather than the
@@ -116,7 +118,17 @@ colour attribute — no per-frame work.
 | High elevation | Pale ochre, warmer                                                            |
 | Ice deposit    | Cold blue-white tint blended over the base                                    |
 | Ore deposit    | Cool dark grey — a brown ore tint is indistinguishable from elevation shading |
-| Not buildable  | Base colour, plus a visible rock outcrop mesh                                 |
+| Steep          | Base colour, plus a visible rock outcrop mesh                                 |
 
-Non-buildable tiles are marked with geometry rather than an overlay colour, so the reason
-a tile is unavailable stays legible when a hover highlight is on top of it.
+### Steep tiles
+
+Steep ground is terrain character, not a rule. Anything can be built on it: the crew clears
+the boulders as part of the build, at no extra cost, and the outcrop mesh disappears for as
+long as a building stands there. Demolishing puts the boulders back.
+
+Two things still follow the flag. Deposits never generate on steep tiles — a seam under a
+boulder field reads as a bug rather than as a find — and the starting colony prefers flat
+ground, so a new game opens on a tidy cluster rather than straddling a ridge.
+
+Boulders are geometry rather than an overlay colour, so rough ground stays legible when a
+hover highlight is drawn on top of it.

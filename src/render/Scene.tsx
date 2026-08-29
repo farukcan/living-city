@@ -7,6 +7,7 @@ import { placeBuilding } from '../state/actions.ts';
 import { useStore } from '../state/store.ts';
 import { DistantHills, GroundPlane, SkyDome } from './Atmosphere.tsx';
 import { Buildings } from './Buildings.tsx';
+import { DamageMarkers } from './DamageMarkers.tsx';
 import { CameraRig } from './CameraRig.tsx';
 import { FrameSampler } from './FrameSampler.tsx';
 import { Pipelines } from './Pipelines.tsx';
@@ -74,6 +75,7 @@ export function Scene() {
       <Outcrops field={terrain} />
       <Pebbles field={terrain} />
       <Buildings field={terrain} buildings={buildings} onSelect={selectBuilding} />
+      <DamageMarkers field={terrain} buildings={buildings} />
       <Pipelines field={terrain} buildings={buildings} showPackets={showFlowLines} />
       <Rocket field={terrain} buildings={buildings} />
 
