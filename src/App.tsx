@@ -3,7 +3,7 @@ import { Scene } from './render/Scene.tsx';
 import { BuildingStudio, type StudioBuildingKind } from './render/BuildingStudio.tsx';
 import { startLoop } from './state/loop.ts';
 import { useStore } from './state/store.ts';
-import { CriticalWarnings, OutageAlert } from './ui/Alerts.tsx';
+import { CasualtyAlert, CriticalWarnings, OutageAlert } from './ui/Alerts.tsx';
 import { BuildBar } from './ui/BuildBar.tsx';
 import { EventToast } from './ui/EventToast.tsx';
 import { GameOverOverlay } from './ui/GameOverOverlay.tsx';
@@ -64,19 +64,11 @@ export function App() {
       <Scene />
 
       {/* The HUD is a stack of full-width rows, not a pile of hand-placed layers: the
-          readout strip, an alarm row, a middle band that takes whatever is left, and the
-          build bar. Nothing is offset by a hardcoded `top-*`, so a strip that wraps onto a
-          second line pushes everything below it down instead of being covered. */}
+          readout strip, a middle band that takes whatever is left, and the build bar.
+          Nothing is offset by a hardcoded `top-*`, so a strip that wraps onto a second line
+          pushes everything below it down instead of being covered. */}
       <div className="pointer-events-none absolute inset-0 flex flex-col">
         <TopBar />
-
-        {/* Alarms get their own row directly under the readings they contradict, centred on
-            the viewport rather than on whatever the side columns leave over. */}
-        <div className="flex shrink-0 flex-col items-center gap-2 px-3">
-          <OutageAlert />
-          <CriticalWarnings />
-          <EventToast />
-        </div>
 
         <div className="flex min-h-0 flex-1 gap-2 p-3">
           {/* Left: what the player opened, with the profiler pinned to the foot. */}
@@ -89,8 +81,17 @@ export function App() {
             </div>
           </div>
 
-          {/* The world keeps the middle. Nothing is allowed to float over it. */}
-          <div className="flex-1" />
+          {/* Alarms take the world's own lane rather than a row above it. They are the one
+              part of the HUD that comes and goes mid-run, and as a row they resized the band
+              below them — a meteor arriving would drop both side columns down the screen.
+              As a third column they are still centred on the viewport, and their height is
+              nobody else's business. */}
+          <div className="flex min-h-0 flex-1 flex-col items-center gap-2">
+            <OutageAlert />
+            <CasualtyAlert />
+            <CriticalWarnings />
+            <EventToast />
+          </div>
 
           {/* Right: how the run is going, what it is aiming at, and the readouts. */}
           <div className={`flex min-h-0 shrink-0 flex-col items-end gap-2 ${COLUMN_WIDTH}`}>

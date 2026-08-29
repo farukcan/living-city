@@ -14,6 +14,7 @@ export const GRID_RADIUS = 10;
 export const HEX_SIZE = 1;
 export const MAX_ELEVATION = 0.6;
 export const NOISE_SCALE = 0.18;
+/** Above this neighbour-to-neighbour delta a tile is steep: boulders, but still buildable. */
 export const SLOPE_LIMIT = 0.25;
 
 /**
@@ -80,16 +81,17 @@ function steepestSlope(sample: Sample, elevationByKey: ReadonlyMap<AxialKey, num
 
 /**
  * Assigns deposits at the given thresholds. Ice wins ties because basins are scarcer than
- * highlands, and a tile can only carry one deposit.
+ * highlands, and a tile can only carry one deposit. Steep ground is skipped: a seam under a
+ * boulder field reads as a bug rather than as a find.
  */
 function assignDeposits(
   samples: readonly Sample[],
-  buildable: readonly boolean[],
+  steep: readonly boolean[],
   iceThreshold: number,
   oreThreshold: number,
 ): DepositKind[] {
   return samples.map((sample, index) => {
-    if (!buildable[index]) return 'none';
+    if (steep[index]) return 'none';
     if (sample.iceNoise > iceThreshold && sample.elevation < ICE_MAX_ELEVATION) return 'ice';
     if (sample.oreNoise > oreThreshold && sample.elevation > ORE_MIN_ELEVATION) return 'ore';
     return 'none';
@@ -109,7 +111,7 @@ function countDeposit(deposits: readonly DepositKind[], kind: DepositKind): numb
  */
 function forceDeposits(
   samples: readonly Sample[],
-  buildable: readonly boolean[],
+  steep: readonly boolean[],
   deposits: DepositKind[],
   kind: 'ice' | 'ore',
 ): void {
@@ -118,7 +120,7 @@ function forceDeposits(
 
   const candidates = samples
     .map((sample, index) => ({ sample, index }))
-    .filter(({ index }) => buildable[index] === true && deposits[index] === 'none')
+    .filter(({ index }) => steep[index] === false && deposits[index] === 'none')
     // Ties break on coordinates so the result stays identical for a given seed.
     .sort((a, b) => {
       const byElevation =
@@ -140,34 +142,34 @@ export function generateTerrain(seed: number, radius: number = GRID_RADIUS): Ter
   const elevationByKey = new Map<AxialKey, number>(
     samples.map((sample) => [axialKey(sample.q, sample.r), sample.elevation]),
   );
-  const buildable = samples.map((sample) => steepestSlope(sample, elevationByKey) <= SLOPE_LIMIT);
+  const steep = samples.map((sample) => steepestSlope(sample, elevationByKey) > SLOPE_LIMIT);
 
   // Relax thresholds until both deposit kinds are placeable. Deterministic: the same seed
   // always needs the same number of relaxations.
   let iceThreshold = ICE_THRESHOLD;
   let oreThreshold = ORE_THRESHOLD;
-  let deposits = assignDeposits(samples, buildable, iceThreshold, oreThreshold);
+  let deposits = assignDeposits(samples, steep, iceThreshold, oreThreshold);
   for (let attempt = 0; attempt < DEPOSIT_RETRY_LIMIT; attempt++) {
     const iceShort = countDeposit(deposits, 'ice') < MIN_DEPOSITS_PER_KIND;
     const oreShort = countDeposit(deposits, 'ore') < MIN_DEPOSITS_PER_KIND;
     if (!iceShort && !oreShort) break;
     if (iceShort) iceThreshold -= DEPOSIT_THRESHOLD_STEP;
     if (oreShort) oreThreshold -= DEPOSIT_THRESHOLD_STEP;
-    deposits = assignDeposits(samples, buildable, iceThreshold, oreThreshold);
+    deposits = assignDeposits(samples, steep, iceThreshold, oreThreshold);
   }
 
   // Relaxing the threshold is not a guarantee: ice also requires low ground, so a seed
   // whose terrain is uniformly high can starve however far the threshold falls. The
   // shortfall is then filled directly, which is what actually makes every seed playable.
-  forceDeposits(samples, buildable, deposits, 'ice');
-  forceDeposits(samples, buildable, deposits, 'ore');
+  forceDeposits(samples, steep, deposits, 'ice');
+  forceDeposits(samples, steep, deposits, 'ore');
 
   const tiles: Tile[] = samples.map((sample, index) => ({
     q: sample.q,
     r: sample.r,
     elevation: sample.elevation,
     deposit: deposits[index] ?? 'none',
-    buildable: buildable[index] ?? false,
+    steep: steep[index] ?? false,
     buildingId: null,
   }));
 

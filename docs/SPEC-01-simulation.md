@@ -273,6 +273,26 @@ A life-support deficit contributes a flat rate with no grace period. Freezing is
 to lose a colony to cold, and giving cold a grace period while oxygen has none would be
 incoherent.
 
+#### The toll
+
+Deaths are a rate, not an event, so nothing fires a toast and the population readout falls
+too slowly to notice. `SimState` therefore carries what the last sol cost, in two buckets:
+
+```
+deathsThisSol'     = (crossed a sol boundary ? 0 : deathsThisSol) + max(0, pop - pop')
+deathsPreviousSol' = crossed one boundary ? deathsThisSol : crossed more ? 0 : unchanged
+```
+
+Measured before the crew unloads, so a landing never masks the sol's casualties — counting
+the net change would report a sol that killed three and delivered four as a quiet one.
+
+Two buckets rather than a ring buffer, because the only question ever asked of them is the
+trailing-sol toll, which `projectSnapshot` answers as
+`deathsThisSol + deathsPreviousSol × (1 - solTime)`: exact at a sol boundary, and an
+even-spread estimate in between, which is fair for a quantity that accrues continuously.
+Neither bucket is saved, for the same reason `history` is not — a toll covering one sol says
+nothing about a colony that is only now being reopened.
+
 ### Game Over
 
 Three terminal states, all sticky and all persisted — `victory` is a win, but it rides the

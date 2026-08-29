@@ -410,7 +410,7 @@ describe('simulateTick', () => {
     // A colony with far more panels than storage must waste power at midday.
     for (let i = 0; i < 6; i++) {
       const free = state.terrain.tiles.find(
-        (tile) => tile.buildable && tile.buildingId === null && tile.deposit === 'none',
+        (tile) => !tile.steep && tile.buildingId === null && tile.deposit === 'none',
       );
       if (!free) break;
       state = {
@@ -489,6 +489,68 @@ describe('population', () => {
       18 * PER_CAPITA_CONSUMPTION.oxygen,
       6,
     );
+  });
+
+  it('tallies deaths into the current sol and leaves a survivor colony at zero', () => {
+    const colony = createColony(SEED);
+    expect(colony.deathsThisSol).toBe(0);
+
+    const starving = runTicks(
+      {
+        ...colony,
+        stocks: { ...colony.stocks, water: 0, food: 0 },
+        // Both grace periods already spent, so the very next tick kills rather than warns.
+        deprivation: { water: 99, food: 99 },
+      },
+      10,
+    );
+
+    expect(starving.deathsThisSol).toBeGreaterThan(0);
+    expect(starving.deathsThisSol).toBeCloseTo(colony.population - starving.population, 6);
+    expect(starving.deathsPreviousSol).toBe(0);
+
+    const fed = runTicks(colony, 10);
+    expect(fed.deathsThisSol).toBe(0);
+  });
+
+  it("rolls the sol's toll into the previous bucket at the boundary", () => {
+    const colony = createColony(SEED);
+    const carried = 3.5;
+    const atMidnight: SimState = {
+      ...colony,
+      stocks: { ...colony.stocks, water: 0, food: 0 },
+      deprivation: { water: 99, food: 99 },
+      // Just short of midnight, so the short step below crosses exactly one boundary.
+      solTime: 0.999,
+      deathsThisSol: carried,
+      deathsPreviousSol: 1,
+    };
+
+    const rolled = simulateTick(atMidnight, SECONDS_PER_SOL * 0.002);
+
+    expect(rolled.sol).toBe(atMidnight.sol + 1);
+    expect(rolled.deathsPreviousSol).toBe(carried);
+    // The new sol starts its own tally, and two thousandths of one cannot match a full sol's.
+    expect(rolled.deathsThisSol).toBeGreaterThan(0);
+    expect(rolled.deathsThisSol).toBeLessThan(carried);
+  });
+
+  // A landing lands survivors, not resurrections: counting the net change would report a
+  // sol that killed three and delivered four as a sol with no casualties at all.
+  it('counts deaths separately from an arriving crew', () => {
+    const colony = createColony(SEED);
+    const dying: SimState = {
+      ...colony,
+      stocks: { ...colony.stocks, water: 0, food: 0 },
+      deprivation: { water: 99, food: 99 },
+      // Sol 6 just short of midnight: the next step crosses into the sol-7 landing.
+      sol: 6,
+      solTime: 0.999,
+    };
+
+    const landed = simulateTick(dying, SECONDS_PER_SOL * 0.002);
+    expect(landed.population).toBeGreaterThan(dying.population);
+    expect(landed.deathsThisSol + landed.deathsPreviousSol).toBeGreaterThan(0);
   });
 });
 

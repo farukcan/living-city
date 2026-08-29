@@ -54,6 +54,11 @@ deprived flags are the live shortage, not leftover timer debt — HUD warnings k
 so a colony that has restocked stops shouting even while the clock is still unwinding.
 `gameOver` is safe to pass by reference: it changes at most once per colony.
 
+`recentDeaths` is the trailing-sol toll described in
+[SPEC-01](./SPEC-01-simulation.md#the-toll), and the only thing on the HUD that states a loss
+outright rather than predicting one. `CasualtyAlert` rounds it and stays silent below half a
+colonist, where the banner would be reporting nobody.
+
 `habitatCount` and `damagedBuildingCount` feed the objectives panel: the former against the
 win threshold, the latter to surface the "repair" prompt for as long as it stays above
 zero. Both are plain reduces over `sim.buildings`, computed fresh each snapshot rather than
@@ -144,15 +149,15 @@ flowchart LR
 All in `src/state/actions.ts`. Each validates against `SimState`, then applies a pure
 transform. Actions never touch the renderer directly.
 
-| Action                      | Validation                                                       | Effect                                                           |
-| --------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `placeBuilding(kind, q, r)` | tile exists, buildable, empty, deposit matches, minerals suffice | deducts cost, appends building, marks tile                       |
-| `demolishBuilding(id)`      | building exists                                                  | refunds 50%, removes it, clears the tile                         |
-| `toggleIdle(id)`            | building exists, not damaged                                     | flips `active` ⇄ `idle`                                          |
-| `repairBuilding(id)`        | damaged, minerals suffice                                        | deducts 30% of cost, sets `active`                               |
-| `setSpeed(n)`               | —                                                                | interaction slice only                                           |
-| `newColony(seed?)`          | —                                                                | regenerates world, reseeds, clears storage and tutorial progress |
-| `restartColony(seed)`       | —                                                                | clears the save, new colony, resumes at 1x                       |
+| Action                      | Validation                                            | Effect                                                           |
+| --------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------- |
+| `placeBuilding(kind, q, r)` | tile exists, empty, deposit matches, minerals suffice | deducts cost, appends building, marks tile                       |
+| `demolishBuilding(id)`      | building exists                                       | refunds 50%, removes it, clears the tile                         |
+| `toggleIdle(id)`            | building exists, not damaged                          | flips `active` ⇄ `idle`                                          |
+| `repairBuilding(id)`        | damaged, minerals suffice                             | deducts 30% of cost, sets `active`                               |
+| `setSpeed(n)`               | —                                                     | interaction slice only                                           |
+| `newColony(seed?)`          | —                                                     | regenerates world, reseeds, clears storage and tutorial progress |
+| `restartColony(seed)`       | —                                                     | clears the save, new colony, resumes at 1x                       |
 
 `placeBuilding`, `demolishBuilding` and `toggleIdle` additionally refuse any kind whose
 definition is not `buildable` — the Landing Pad. That check lives here rather than in

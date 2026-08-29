@@ -88,6 +88,30 @@ function detectGameOver(
   return null;
 }
 
+/**
+ * Rolls the two death buckets across whatever sol boundaries this tick crossed.
+ *
+ * `solsElapsed` is 0 or 1 at every practical tick size. Two or more would mean the older
+ * bucket has fallen entirely out of the trailing-sol window, so it is dropped rather than
+ * carried forward as a toll the colony no longer owes.
+ */
+function rollDeaths(
+  state: SimState,
+  solsElapsed: number,
+  deaths: number,
+): { readonly deathsThisSol: number; readonly deathsPreviousSol: number } {
+  if (solsElapsed === 0) {
+    return {
+      deathsThisSol: state.deathsThisSol + deaths,
+      deathsPreviousSol: state.deathsPreviousSol,
+    };
+  }
+  if (solsElapsed === 1) {
+    return { deathsThisSol: deaths, deathsPreviousSol: state.deathsThisSol };
+  }
+  return { deathsThisSol: deaths, deathsPreviousSol: 0 };
+}
+
 function pushHistory(
   history: readonly HistorySample[],
   sample: HistorySample,
@@ -202,6 +226,13 @@ export function simulateTick(state: SimState, dtSeconds: number): SimState {
     dtSol,
   });
 
+  // Measured before the crew unloads, so a landing never masks the sol's casualties.
+  const deaths = rollDeaths(
+    state,
+    solsElapsed,
+    Math.max(0, state.population - survivors.population),
+  );
+
   const arriving = crewArriving(state.sol, sol);
   const population = survivors.population + arriving;
 
@@ -254,6 +285,8 @@ export function simulateTick(state: SimState, dtSeconds: number): SimState {
     stocks,
     population,
     deprivation: survivors.deprivation,
+    deathsThisSol: deaths.deathsThisSol,
+    deathsPreviousSol: deaths.deathsPreviousSol,
     gameOver,
     activeEvents: events.activeEvents,
     notices,

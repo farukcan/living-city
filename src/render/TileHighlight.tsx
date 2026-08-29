@@ -16,6 +16,11 @@ type TileHighlightProps = {
  *
  * Drawn as its own mesh rather than by recolouring the terrain instance, so the tile's own
  * colour — which encodes elevation and deposit — stays visible underneath.
+ *
+ * One colour, because this only ever renders with placement disarmed (see `Scene`) and there
+ * is nothing for a hover to be invalid about: an empty tile is a click that clears the
+ * selection and an occupied one is a click that opens the inspector. `PlacementGhost` is what
+ * colours a tile by whether it can be built on, and it runs the real `checkPlacement`.
  */
 export function TileHighlight({ field, tileKey }: TileHighlightProps) {
   const placement = useMemo(() => {
@@ -24,7 +29,7 @@ export function TileHighlight({ field, tileKey }: TileHighlightProps) {
     const tile = findTile(field, q, r);
     if (tile === null) return null;
     const { x, z } = hexToWorld(tile, HEX_SIZE);
-    return { x, z, y: tileHeight(tile) + 0.02, valid: tile.buildable };
+    return { x, z, y: tileHeight(tile) + 0.02 };
   }, [field, tileKey]);
 
   if (placement === null) return null;
@@ -32,11 +37,7 @@ export function TileHighlight({ field, tileKey }: TileHighlightProps) {
   return (
     <mesh position={[placement.x, placement.y, placement.z]} rotation={[0, Math.PI / 6, 0]}>
       <cylinderGeometry args={[HEX_SIZE * 0.96, HEX_SIZE * 0.96, 0.04, 6]} />
-      <meshBasicMaterial
-        color={placement.valid ? PALETTE.hoverValid : PALETTE.hoverInvalid}
-        transparent
-        opacity={0.45}
-      />
+      <meshBasicMaterial color={PALETTE.hoverValid} transparent opacity={0.45} />
     </mesh>
   );
 }

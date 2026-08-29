@@ -36,7 +36,7 @@ function colonyWithBuildings(target: number): SimState {
   let rotation = 0;
   for (const tile of state.terrain.tiles) {
     if (state.buildings.length >= target) break;
-    if (!tile.buildable || tile.buildingId !== null) continue;
+    if (tile.steep || tile.buildingId !== null) continue;
     const kind = ROTATION[rotation % ROTATION.length] ?? 'solarArray';
     rotation++;
     if (checkPlacement(state, kind, tile.q, tile.r).ok) {

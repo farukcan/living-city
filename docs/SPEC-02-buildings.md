@@ -183,9 +183,11 @@ section for how `victory` is checked against the two losses.
 
 1. The kind must be buildable. The Landing Pad is not.
 2. The tile must exist and be unoccupied.
-3. The tile must not be too steep (see [SPEC-03](./SPEC-03-world.md)).
-4. Ice Extractor requires an `ice` deposit; Mine requires an `ore` deposit.
-5. Minerals in stock must cover the cost.
+3. Ice Extractor requires an `ice` deposit; Mine requires an `ore` deposit.
+4. Minerals in stock must cover the cost.
+
+Slope is not a rule. Steep tiles carry boulders, and building on one clears them (see
+[SPEC-03](./SPEC-03-world.md)).
 
 Rule 1 is enforced at the user-action boundary rather than inside `checkPlacement`, because
 the starting colony routes its own buildings — the pad included — through that same check.

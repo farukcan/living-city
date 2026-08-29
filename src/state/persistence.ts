@@ -113,6 +113,10 @@ export function fromSaveFile(save: SaveFile): SimState {
     deprivation: { ...save.deprivation },
     notices: [],
     history: [],
+    // Same reasoning as `history`: a toll covering the last sol says nothing useful about a
+    // colony the player is only now reopening.
+    deathsThisSol: 0,
+    deathsPreviousSol: 0,
     // Restored alive so the priming tick below actually runs: `simulateTick` returns
     // immediately once `gameOver` is set, which would leave the template's report in place.
     gameOver: null,

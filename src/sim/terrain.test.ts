@@ -145,9 +145,9 @@ describe('generateTerrain', () => {
   it('produces a playable field for a wide sweep of seeds', () => {
     for (let seed = -300; seed <= 300; seed += 7) {
       const field = generateTerrain(seed);
-      const ice = field.tiles.filter((tile) => tile.deposit === 'ice' && tile.buildable);
-      const ore = field.tiles.filter((tile) => tile.deposit === 'ore' && tile.buildable);
-      const free = field.tiles.filter((tile) => tile.buildable && tile.deposit === 'none');
+      const ice = field.tiles.filter((tile) => tile.deposit === 'ice' && !tile.steep);
+      const ore = field.tiles.filter((tile) => tile.deposit === 'ore' && !tile.steep);
+      const free = field.tiles.filter((tile) => !tile.steep && tile.deposit === 'none');
       expect(ice.length, `seed ${seed} has too little ice`).toBeGreaterThanOrEqual(4);
       expect(ore.length, `seed ${seed} has too little ore`).toBeGreaterThanOrEqual(4);
       // The starting colony needs eleven plain tiles before the player places anything.
@@ -155,10 +155,10 @@ describe('generateTerrain', () => {
     }
   });
 
-  it('only places deposits on buildable tiles', () => {
+  it('keeps deposits off steep tiles', () => {
     for (const seed of SEEDS) {
       for (const tile of generateTerrain(seed).tiles) {
-        if (tile.deposit !== 'none') expect(tile.buildable).toBe(true);
+        if (tile.deposit !== 'none') expect(tile.steep).toBe(false);
       }
     }
   });
@@ -171,11 +171,11 @@ describe('generateTerrain', () => {
     }
   });
 
-  it('leaves most of the field buildable so the colony has room', () => {
+  it('leaves most of the field open ground so the colony has room', () => {
     for (const seed of SEEDS) {
       const field = generateTerrain(seed);
-      const buildable = field.tiles.filter((tile) => tile.buildable).length;
-      expect(buildable / field.tiles.length).toBeGreaterThan(0.5);
+      const steep = field.tiles.filter((tile) => tile.steep).length;
+      expect(steep / field.tiles.length).toBeLessThan(0.5);
     }
   });
 
