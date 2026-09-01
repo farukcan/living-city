@@ -16,12 +16,12 @@ oxygen, food and heat every tick.
 
 The rendering is the readout. The simulation is the product.
 
-![The colony at midday, founding rocket on the pad](./docs/interface.png)
+![The colony on its opening morning, founding rocket on the pad](./docs/interface.png)
 
 At night solar output reaches zero, the batteries carry the colony, and the allocator sheds
 the mine and then the greenhouse to keep life support running until sunrise:
 
-![The same colony after dark, rocket still on the pad](./docs/night.png)
+![The same colony after dark, the founding rocket long gone](./docs/night.png)
 
 ## Tech Stack
 

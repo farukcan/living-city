@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { zoomToColony } from './framing.ts';
 
 /**
  * Visual references for the day/night cycle.
@@ -74,6 +75,11 @@ test('night is visibly darker than day', async ({ page }) => {
   await page.getByRole('button', { name: '❚❚' }).click();
   await page.waitForTimeout(400);
   const nightBrightness = await meanBrightness(page);
+
+  // Zoomed in only for the capture, and only after both readings are taken: close framing
+  // fills the frame with lit windows, which would flatter the night sample and turn the
+  // brightness comparison below into a test of the camera rather than of the lighting.
+  await zoomToColony(page);
   await page.screenshot({ path: 'test-results/night.png' });
 
   // The whole point of the day/night cycle: it has to be visible, not merely simulated.
@@ -92,6 +98,8 @@ test('captures the rocket on approach', async ({ page }) => {
   test.setTimeout(180_000);
   await page.goto('/');
   await waitForScene(page);
+
+  await zoomToColony(page);
 
   await page.getByRole('button', { name: '16×' }).click();
   await expect

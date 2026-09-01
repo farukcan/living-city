@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { ConsoleMessage, Page } from '@playwright/test';
+import { zoomToColony } from './framing.ts';
 
 /**
  * Smoke coverage for the rendered app.
@@ -119,55 +120,28 @@ test('captures a reference screenshot of the scene', async ({ page }) => {
   await page.goto('/');
   await waitForCanvas(page);
   await page.waitForTimeout(1500);
+  await zoomToColony(page);
   await page.screenshot({ path: 'test-results/scene.png', fullPage: false });
 });
 
 /**
- * Not an assertion — a visual reference showing the whole HUD populated: several sols of
- * history in the sparkline and the inspector open on a building.
+ * Not an assertion — a visual reference of the opening frame: the founding rocket still on
+ * its pad, and the tutorial panel the colony greets a new player with.
+ *
+ * Captured on sol 1 and never run forward, and nothing in the scene is clicked. The rocket
+ * is parked only for the first half of the opening sol (see `rocketPhase.ts`), and a click
+ * would trade the opening panel for the building inspector — this reference is what the
+ * game looks like before the player has done anything.
  */
 test('captures a reference screenshot of the full interface', async ({ page }) => {
-  // Waiting for a specific time of day can take most of a simulated sol.
-  test.setTimeout(120_000);
   await page.goto('/');
   await waitForCanvas(page);
 
-  await page.getByRole('button', { name: '16×' }).click();
-  await page.waitForTimeout(9000); // ~2.5 sols, enough for the sparkline to have a shape.
-
-  // Then hold for daylight: a fixed wait lands wherever it lands, and an evening frame
-  // undersells a scene whose whole point is the light. Drop to 1x first — at 16x the clock
-  // moves several hours between the poll succeeding and the pause click landing, which is
-  // how this test kept producing dusk screenshots.
-  // 4x is the compromise: fast enough that a whole sol is a 15 second wait, slow enough
-  // that the three-hour target window lasts ~2 s and the pause click lands inside it.
-  await page.getByRole('button', { name: '4×' }).click();
-  await expect
-    .poll(
-      async () => {
-        const clock =
-          (await page
-            .getByText(/^\d{2}:\d{2}$/)
-            .first()
-            .textContent()) ?? '00:00';
-        const hour = Number(clock.split(':')[0] ?? 0);
-        // A lower bound alone is satisfied by 21:00 as readily as by noon.
-        return hour >= 11 && hour <= 14;
-      },
-      { timeout: 60_000, intervals: [120] },
-    )
-    .toBe(true);
+  // Paused before anything else: the colony opens at 07:40 and the rocket lifts off at
+  // midday, so letting the clock run at all is time spent walking towards an empty pad.
   await page.getByRole('button', { name: '❚❚' }).click();
-  await page.waitForTimeout(300);
-
-  const box = await page.locator('canvas').boundingBox();
-  if (!box) return;
-  const idleButton = page.getByRole('button', { name: 'Idle', exact: true });
-  for (const offsetX of [0, -0.04, 0.04, -0.08, 0.08, -0.12, 0.12]) {
-    await page.mouse.click(box.x + box.width * (0.5 + offsetX), box.y + box.height * 0.46);
-    await page.waitForTimeout(100);
-    if (await idleButton.isVisible()) break;
-  }
+  await page.waitForTimeout(500);
+  await zoomToColony(page);
 
   await page.screenshot({ path: 'test-results/interface.png', fullPage: false });
 });
